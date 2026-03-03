@@ -62,7 +62,7 @@ SLACK_WEBHOOK_URL=<Slack Incoming Webhook URL>
 | スケジュール | 処理 |
 |-------------|------|
 | `0 * * * *` (毎時) | Spreadsheet → D1 config 同期 |
-| `0 18 * * *` (AM 3:00 JST) | 失敗メールリトライ / BigQuery Sync（予定） |
+| `0 18 * * *` (AM 3:00 JST) | 失敗メールリトライ |
 
 ## 環境変数
 
@@ -83,7 +83,6 @@ SLACK_WEBHOOK_URL=<Slack Incoming Webhook URL>
 | `NPS_API_KEY` | Webhook / Sync 認証用 API キー |
 | `SENDGRID_API_KEY` | SendGrid API キー |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Spreadsheet 読み取り用サービスアカウント |
-| `BQ_SERVICE_ACCOUNT_JSON` | BigQuery Sync 用サービスアカウント |
 | `SLACK_WEBHOOK_URL` | エラー通知用 Slack Webhook |
 
 ## テスト
@@ -130,7 +129,6 @@ wrangler secret put SLACK_WEBHOOK_URL --env staging
 
 # SA Key（Terraform 管理の場合は make -C infra secrets で代替可）
 # wrangler secret put GOOGLE_SERVICE_ACCOUNT_JSON
-# wrangler secret put BQ_SERVICE_ACCOUNT_JSON
 ```
 
 ### デプロイ実行

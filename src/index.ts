@@ -70,7 +70,7 @@ export default {
         ctx.waitUntil(runSpreadsheetSync(env));
         break;
       case '0 18 * * *':
-        // 毎日 18:00 UTC: D1 → BigQuery Sync（Phase 6 で実装）+ 失敗メールリトライ
+        // 毎日 18:00 UTC (AM 3:00 JST): 失敗メールリトライ
         ctx.waitUntil(retryFailedEmails(env));
         break;
     }

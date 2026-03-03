@@ -22,8 +22,4 @@ echo "=== Pushing SA keys to Workers secrets ==="
 push_secret GOOGLE_SERVICE_ACCOUNT_JSON sheets_sa_key_json
 push_secret GOOGLE_SERVICE_ACCOUNT_JSON sheets_sa_key_json --env staging
 
-# BigQuery SA key → BQ_SERVICE_ACCOUNT_JSON
-push_secret BQ_SERVICE_ACCOUNT_JSON bigquery_sa_key_json
-push_secret BQ_SERVICE_ACCOUNT_JSON bigquery_sa_key_json --env staging
-
 echo "=== Done ==="

@@ -59,7 +59,6 @@ CREATE TABLE IF NOT EXISTS nps_responses (
     opportunity_id    TEXT,
     -- タイムスタンプ
     created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
-    -- BigQuery sync 管理
     synced_at         TEXT,
 
     FOREIGN KEY (survey_request_id) REFERENCES nps_survey_requests(id)

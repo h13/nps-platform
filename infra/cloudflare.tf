@@ -25,7 +25,7 @@ resource "cloudflare_worker_cron_trigger" "production" {
   script_name = var.workers_script_name
   schedules = [
     "0 * * * *",  # Spreadsheet → D1 config sync (hourly)
-    "0 18 * * *", # D1 → BigQuery sync (daily 03:00 JST)
+    "0 18 * * *", # Failed email retry (daily 03:00 JST)
   ]
 }
 

@@ -8,7 +8,6 @@ export interface Env {
   SENDGRID_FROM_NAME: string;
   SPREADSHEET_ID: string;
   GOOGLE_SERVICE_ACCOUNT_JSON: string;
-  BQ_SERVICE_ACCOUNT_JSON: string;
   SLACK_WEBHOOK_URL: string;
 }
 

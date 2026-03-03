@@ -13,26 +13,12 @@ output "d1_staging_id" {
 }
 
 # ---------------------------------------------------------
-# BigQuery
-# ---------------------------------------------------------
-
-output "bigquery_dataset_id" {
-  description = "BigQuery dataset ID for NPS responses"
-  value       = google_bigquery_dataset.nps.dataset_id
-}
-
-# ---------------------------------------------------------
 # Service Account Emails
 # ---------------------------------------------------------
 
 output "sheets_reader_email" {
   description = "Sheets reader service account email"
   value       = google_service_account.sheets_reader.email
-}
-
-output "bigquery_writer_email" {
-  description = "BigQuery writer service account email"
-  value       = google_service_account.bigquery_writer.email
 }
 
 # ---------------------------------------------------------
@@ -42,11 +28,5 @@ output "bigquery_writer_email" {
 output "sheets_sa_key_json" {
   description = "Sheets reader SA key (base64-encoded JSON)"
   value       = google_service_account_key.sheets_reader.private_key
-  sensitive   = true
-}
-
-output "bigquery_sa_key_json" {
-  description = "BigQuery writer SA key (base64-encoded JSON)"
-  value       = google_service_account_key.bigquery_writer.private_key
   sensitive   = true
 }

@@ -6,11 +6,9 @@ NPS Platform のインフラをコードで管理する。
 
 | リソース | Provider | Terraform 管理 |
 |---------|----------|---------------|
-| GCP API 有効化 (Sheets, BigQuery, IAM) | `hashicorp/google` | Yes |
-| Service Account (Sheets Reader / BigQuery Writer) | `hashicorp/google` | Yes |
+| GCP API 有効化 (Sheets, IAM) | `hashicorp/google` | Yes |
+| Service Account (Sheets Reader) | `hashicorp/google` | Yes |
 | SA Key 生成 | `hashicorp/google` | Yes |
-| BigQuery Dataset (`nps_responses`) | `hashicorp/google` | Yes |
-| IAM Binding (BigQuery jobUser) | `hashicorp/google` | Yes |
 | D1 Database (prod + staging) | `cloudflare/cloudflare` | Yes |
 | Cron Trigger (prod + staging) | `cloudflare/cloudflare` | Yes |
 | Workers Script デプロイ | — | No（`wrangler deploy`） |
@@ -94,14 +92,9 @@ cd infra
 # 1. GCP リソース + D1 のみ先に適用
 terraform apply \
   -target=google_project_service.sheets \
-  -target=google_project_service.bigquery \
   -target=google_project_service.iam \
   -target=google_service_account.sheets_reader \
-  -target=google_service_account.bigquery_writer \
   -target=google_service_account_key.sheets_reader \
-  -target=google_service_account_key.bigquery_writer \
-  -target=google_bigquery_dataset.nps \
-  -target=google_project_iam_member.bigquery_job_user \
   -target=cloudflare_d1_database.production \
   -target=cloudflare_d1_database.staging
 
