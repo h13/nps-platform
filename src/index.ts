@@ -1,4 +1,4 @@
-import { handleWebhook } from './routes/webhook';
+import { handleWebhook, retryFailedEmails } from './routes/webhook';
 import { handleForm } from './routes/form';
 import { handleResponse } from './routes/response';
 import { handleConfig } from './routes/config';
@@ -44,7 +44,15 @@ export default {
     }
   },
 
-  async scheduled(_event: ScheduledEvent, _env: Env, _ctx: ExecutionContext) {
-    // Phase 5, 6 で実装
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+    switch (event.cron) {
+      case '0 * * * *':
+        // 毎時: Spreadsheet → D1 config 同期（Phase 5 で実装）
+        break;
+      case '0 18 * * *':
+        // 毎日 18:00 UTC: D1 → BigQuery Sync（Phase 6 で実装）+ 失敗メールリトライ
+        ctx.waitUntil(retryFailedEmails(env));
+        break;
+    }
   },
 };
