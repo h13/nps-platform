@@ -1,0 +1,52 @@
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+    paths: ["infra/**"]
+  pull_request:
+    branches: [main]
+    paths: ["infra/**"]
+
+jobs:
+  check:
+    name: Lint & Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> 1.5"
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: TFLint Init
+        run: tflint --init
+
+      - name: TFLint
+        run: tflint
+
+      - name: Trivy Config Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          scan-ref: infra
+          format: sarif
+          output: trivy-results.sarif
+          exit-code: 1
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: infra/trivy-results.sarif
