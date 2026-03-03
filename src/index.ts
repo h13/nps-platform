@@ -1,3 +1,6 @@
+import { handleWebhook } from './routes/webhook';
+import { handleForm } from './routes/form';
+import { handleResponse } from './routes/response';
 import { handleConfig } from './routes/config';
 import type { Env } from './types';
 
@@ -20,6 +23,16 @@ export default {
     }
 
     try {
+      if (method === 'POST' && path === '/nps/webhook') {
+        return handleWebhook(request, env);
+      }
+      if (method === 'GET' && path.startsWith('/nps/form/')) {
+        const token = path.replace('/nps/form/', '');
+        return handleForm(token, env);
+      }
+      if (method === 'POST' && path === '/nps/response') {
+        return handleResponse(request, env);
+      }
       if (method === 'GET' && path === '/nps/config') {
         return handleConfig(env);
       }
