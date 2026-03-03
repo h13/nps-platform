@@ -1,5 +1,7 @@
 import { verifyBearerToken } from '../middleware/auth';
-import type { Env, WebhookPayload } from '../types';
+import { sendMail } from '../services/sendgrid';
+import { renderEmailSubject, renderEmailHtml } from '../templates/email';
+import type { Env, WebhookPayload, SurveyConfig } from '../types';
 
 export async function handleWebhook(request: Request, env: Env): Promise<Response> {
   const authError = verifyBearerToken(request, env);
@@ -58,10 +60,106 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
     expiresAt
   ).run();
 
-  // Phase 3 でメール送信を統合。現時点では queued のまま返却。
+  const configRow = await env.DB.prepare(
+    'SELECT config_json FROM survey_config WHERE id = 1'
+  ).first<{ config_json: string }>();
+
+  const config: SurveyConfig = configRow
+    ? JSON.parse(configRow.config_json)
+    : { survey_title: 'アンケート', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB' };
+
+  const subject = renderEmailSubject(
+    config.email_subject_template || '{survey_title}',
+    { account_name, survey_title: config.survey_title, contact_name }
+  );
+
+  const formUrl = `${env.NPS_BASE_URL}/nps/form/${token}`;
+  const htmlBody = renderEmailHtml({
+    contactName: contact_name,
+    surveyTitle: config.survey_title,
+    formUrl,
+    expiresAt,
+    primaryColor: config.widget_primary_color || '#2563EB',
+  });
+
+  const result = await sendMail(env, {
+    to: contact_email,
+    toName: contact_name,
+    subject,
+    htmlBody,
+  });
+
+  if (result.ok) {
+    await env.DB.prepare(
+      "UPDATE nps_survey_requests SET status = 'sent', sent_at = datetime('now'), send_attempts = send_attempts + 1, updated_at = datetime('now') WHERE token = ?"
+    ).bind(token).run();
+  } else {
+    await env.DB.prepare(
+      "UPDATE nps_survey_requests SET status = 'failed', error_message = ?, send_attempts = send_attempts + 1, updated_at = datetime('now') WHERE token = ?"
+    ).bind(result.error ?? 'Unknown error', token).run();
+  }
 
   return new Response(
     JSON.stringify({ status: 'accepted', token }),
     { status: 202, headers: { 'Content-Type': 'application/json' } }
   );
+}
+
+export async function retryFailedEmails(env: Env): Promise<void> {
+  const rows = await env.DB.prepare(
+    `SELECT id, token, contact_email, contact_name, account_name, expires_at
+     FROM nps_survey_requests
+     WHERE status = 'failed' AND send_attempts < 3
+     LIMIT 50`
+  ).all<{
+    id: number;
+    token: string;
+    contact_email: string;
+    contact_name: string;
+    account_name: string;
+    expires_at: string;
+  }>();
+
+  if (!rows.results || rows.results.length === 0) return;
+
+  const configRow = await env.DB.prepare(
+    'SELECT config_json FROM survey_config WHERE id = 1'
+  ).first<{ config_json: string }>();
+
+  const config: SurveyConfig = configRow
+    ? JSON.parse(configRow.config_json)
+    : { survey_title: 'アンケート', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB' };
+
+  for (const row of rows.results) {
+    const subject = renderEmailSubject(
+      config.email_subject_template || '{survey_title}',
+      { account_name: row.account_name, survey_title: config.survey_title, contact_name: row.contact_name }
+    );
+
+    const formUrl = `${env.NPS_BASE_URL}/nps/form/${row.token}`;
+    const htmlBody = renderEmailHtml({
+      contactName: row.contact_name,
+      surveyTitle: config.survey_title,
+      formUrl,
+      expiresAt: row.expires_at,
+      primaryColor: config.widget_primary_color || '#2563EB',
+    });
+
+    const result = await sendMail(env, {
+      to: row.contact_email,
+      toName: row.contact_name,
+      subject,
+      htmlBody,
+    });
+
+    if (result.ok) {
+      await env.DB.prepare(
+        "UPDATE nps_survey_requests SET status = 'sent', sent_at = datetime('now'), send_attempts = send_attempts + 1, error_message = NULL, updated_at = datetime('now') WHERE id = ?"
+      ).bind(row.id).run();
+    } else {
+      await env.DB.prepare(
+        "UPDATE nps_survey_requests SET error_message = ?, send_attempts = send_attempts + 1, updated_at = datetime('now') WHERE id = ?"
+      ).bind(result.error ?? 'Unknown error', row.id).run();
+    }
+  }
 }
