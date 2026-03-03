@@ -8,14 +8,12 @@ function corsHeaders(): Record<string, string> {
   };
 }
 
-function validateAnswers(
+export function validateAnswers(
   answers: Record<string, unknown>,
   questions: Question[]
 ): { sanitized: Record<string, unknown>; errors: string[] } {
   const sanitized: Record<string, unknown> = {};
   const errors: string[] = [];
-  const questionMap = new Map(questions.map((q) => [q.id, q]));
-
   for (const question of questions) {
     const value = answers[question.id];
     const missing = value === undefined || value === null || value === '';
@@ -110,7 +108,15 @@ export async function handleResponse(request: Request, env: Env): Promise<Respon
     );
   }
 
-  const config: SurveyConfig = JSON.parse(configRow.config_json);
+  let config: SurveyConfig;
+  try {
+    config = JSON.parse(configRow.config_json);
+  } catch {
+    return new Response(
+      JSON.stringify({ error: 'Survey configuration is invalid' }),
+      { status: 500, headers: corsHeaders() }
+    );
+  }
   const { sanitized, errors } = validateAnswers(body.answers, config.questions);
 
   if (errors.length > 0) {

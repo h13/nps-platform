@@ -123,7 +123,7 @@ async function fetchSheets(accessToken: string, spreadsheetId: string): Promise<
 
 // --- Sheet Parsing ---
 
-function parseRowsToObjects(values: string[][]): Record<string, string>[] {
+export function parseRowsToObjects(values: string[][]): Record<string, string>[] {
   if (values.length < 2) return [];
   const headers = values[0];
   return values.slice(1).map((row) => {
@@ -135,17 +135,17 @@ function parseRowsToObjects(values: string[][]): Record<string, string>[] {
   });
 }
 
-function parseBool(value: string): boolean {
+export function parseBool(value: string): boolean {
   return value.toUpperCase() === 'TRUE';
 }
 
-function parseOptionalInt(value: string): number | undefined {
+export function parseOptionalInt(value: string): number | undefined {
   if (value === '') return undefined;
   const n = parseInt(value, 10);
   return isNaN(n) ? undefined : n;
 }
 
-function parseQuestions(rows: Record<string, string>[]): Omit<Question, 'options'>[] {
+export function parseQuestions(rows: Record<string, string>[]): Omit<Question, 'options'>[] {
   return rows
     .filter((r) => parseBool(r.is_active))
     .map((r) => {
@@ -167,7 +167,7 @@ function parseQuestions(rows: Record<string, string>[]): Omit<Question, 'options
     .sort((a, b) => a.display_order - b.display_order);
 }
 
-function parseOptions(rows: Record<string, string>[]): Map<string, QuestionOption[]> {
+export function parseOptions(rows: Record<string, string>[]): Map<string, QuestionOption[]> {
   const grouped = new Map<string, QuestionOption[]>();
 
   const activeRows = rows
@@ -184,7 +184,7 @@ function parseOptions(rows: Record<string, string>[]): Map<string, QuestionOptio
   return grouped;
 }
 
-function parseConfig(rows: Record<string, string>[]): Record<string, string> {
+export function parseConfig(rows: Record<string, string>[]): Record<string, string> {
   const config: Record<string, string> = {};
   for (const r of rows) {
     if (r.key && r.value !== undefined) {
@@ -194,7 +194,7 @@ function parseConfig(rows: Record<string, string>[]): Record<string, string> {
   return config;
 }
 
-function buildSurveyConfig(
+export function buildSurveyConfig(
   questionRows: Record<string, string>[],
   optionRows: Record<string, string>[],
   configRows: Record<string, string>[],

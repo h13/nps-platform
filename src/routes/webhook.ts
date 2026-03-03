@@ -25,6 +25,14 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
     );
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(contact_email)) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid contact_email format' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   const duplicate = await env.DB.prepare(
     `SELECT id FROM nps_survey_requests
      WHERE opportunity_id = ? AND stage = ? AND status IN ('queued', 'sent', 'opened')
@@ -64,9 +72,14 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
     'SELECT config_json FROM survey_config WHERE id = 1'
   ).first<{ config_json: string }>();
 
-  const config: SurveyConfig = configRow
-    ? JSON.parse(configRow.config_json)
-    : { survey_title: 'アンケート', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB' };
+  let config: SurveyConfig;
+  try {
+    config = configRow
+      ? JSON.parse(configRow.config_json)
+      : { survey_title: 'アンケート', thanks_message: '', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB', widget_bg_color: '#FFFFFF', widget_text_color: '#1F2937', questions: [] };
+  } catch {
+    config = { survey_title: 'アンケート', thanks_message: '', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB', widget_bg_color: '#FFFFFF', widget_text_color: '#1F2937', questions: [] };
+  }
 
   const subject = renderEmailSubject(
     config.email_subject_template || '{survey_title}',
@@ -126,40 +139,50 @@ export async function retryFailedEmails(env: Env): Promise<void> {
     'SELECT config_json FROM survey_config WHERE id = 1'
   ).first<{ config_json: string }>();
 
-  const config: SurveyConfig = configRow
-    ? JSON.parse(configRow.config_json)
-    : { survey_title: 'アンケート', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB' };
+  let config: SurveyConfig;
+  try {
+    config = configRow
+      ? JSON.parse(configRow.config_json)
+      : { survey_title: 'アンケート', thanks_message: '', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB', widget_bg_color: '#FFFFFF', widget_text_color: '#1F2937', questions: [] };
+  } catch {
+    config = { survey_title: 'アンケート', thanks_message: '', email_subject_template: '{survey_title}', widget_primary_color: '#2563EB', widget_bg_color: '#FFFFFF', widget_text_color: '#1F2937', questions: [] };
+  }
 
   for (const row of rows.results) {
-    const subject = renderEmailSubject(
-      config.email_subject_template || '{survey_title}',
-      { account_name: row.account_name, survey_title: config.survey_title, contact_name: row.contact_name }
-    );
+    try {
+      const subject = renderEmailSubject(
+        config.email_subject_template || '{survey_title}',
+        { account_name: row.account_name, survey_title: config.survey_title, contact_name: row.contact_name }
+      );
 
-    const formUrl = `${env.NPS_BASE_URL}/nps/form/${row.token}`;
-    const htmlBody = renderEmailHtml({
-      contactName: row.contact_name,
-      surveyTitle: config.survey_title,
-      formUrl,
-      expiresAt: row.expires_at,
-      primaryColor: config.widget_primary_color || '#2563EB',
-    });
+      const formUrl = `${env.NPS_BASE_URL}/nps/form/${row.token}`;
+      const htmlBody = renderEmailHtml({
+        contactName: row.contact_name,
+        surveyTitle: config.survey_title,
+        formUrl,
+        expiresAt: row.expires_at,
+        primaryColor: config.widget_primary_color || '#2563EB',
+      });
 
-    const result = await sendMail(env, {
-      to: row.contact_email,
-      toName: row.contact_name,
-      subject,
-      htmlBody,
-    });
+      const result = await sendMail(env, {
+        to: row.contact_email,
+        toName: row.contact_name,
+        subject,
+        htmlBody,
+      });
 
-    if (result.ok) {
-      await env.DB.prepare(
-        "UPDATE nps_survey_requests SET status = 'sent', sent_at = datetime('now'), send_attempts = send_attempts + 1, error_message = NULL, updated_at = datetime('now') WHERE id = ?"
-      ).bind(row.id).run();
-    } else {
-      await env.DB.prepare(
-        "UPDATE nps_survey_requests SET error_message = ?, send_attempts = send_attempts + 1, updated_at = datetime('now') WHERE id = ?"
-      ).bind(result.error ?? 'Unknown error', row.id).run();
+      if (result.ok) {
+        await env.DB.prepare(
+          "UPDATE nps_survey_requests SET status = 'sent', sent_at = datetime('now'), send_attempts = send_attempts + 1, error_message = NULL, updated_at = datetime('now') WHERE id = ?"
+        ).bind(row.id).run();
+      } else {
+        await env.DB.prepare(
+          "UPDATE nps_survey_requests SET error_message = ?, send_attempts = send_attempts + 1, updated_at = datetime('now') WHERE id = ?"
+        ).bind(result.error ?? 'Unknown error', row.id).run();
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`[retryFailedEmails] Error processing id=${row.id}:`, message);
     }
   }
 }

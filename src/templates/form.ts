@@ -58,7 +58,7 @@ export function renderFormHtml(configJson: string, token: string): string {
 </div>
 <script>
 (function() {
-  var CONFIG = ${configJson};
+  var CONFIG = JSON.parse(${JSON.stringify(configJson)});
   var TOKEN = ${JSON.stringify(token)};
 
   document.documentElement.style.setProperty('--primary-color', CONFIG.widget_primary_color || '#2563EB');

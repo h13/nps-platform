@@ -9,7 +9,10 @@
     "db:schema": "wrangler d1 execute nps-platform --local --file=./sql/schema.sql",
     "db:seed": "wrangler d1 execute nps-platform --local --file=./sql/seed.sql",
     "db:setup": "npm run db:schema && npm run db:seed",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -24,8 +27,11 @@
   },
   "homepage": "https://github.com/h13/nps-platform#readme",
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.12.18",
     "@cloudflare/workers-types": "^4.20260305.0",
+    "@vitest/coverage-istanbul": "^3.2.4",
     "typescript": "^5.9.3",
+    "vitest": "^3.2.4",
     "wrangler": "^4.69.0"
   }
 }
