@@ -1,0 +1,31 @@
+{
+  "name": "nps-platform",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "db:schema": "wrangler d1 execute nps-platform --local --file=./sql/schema.sql",
+    "db:seed": "wrangler d1 execute nps-platform --local --file=./sql/seed.sql",
+    "db:setup": "npm run db:schema && npm run db:seed",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h13/nps-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/h13/nps-platform/issues"
+  },
+  "homepage": "https://github.com/h13/nps-platform#readme",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260305.0",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.69.0"
+  }
+}
