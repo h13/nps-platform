@@ -4,7 +4,7 @@
 [![Terraform](https://github.com/h13/nps-platform/actions/workflows/terraform.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/terraform.yml)
 [![CodeQL](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql)
 
-Qualtrics 代替の NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers + D1 で構築し、Salesforce 連携・メール配信・LP ウィジェットを単一プロジェクトで完結させる。
+NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers + D1 で構築し、Salesforce 連携・メール配信・LP ウィジェットを単一プロジェクトで完結させる。
 
 ## 技術スタック
 
