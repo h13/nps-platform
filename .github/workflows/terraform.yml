@@ -55,4 +55,4 @@ jobs:
         uses: github/codeql-action/upload-sarif@ae9ef3a1d2e3413523c3741725c30064970cc0d4 # v3
         if: always()
         with:
-          sarif_file: infra/trivy-results.sarif
+          sarif_file: trivy-results.sarif
