@@ -2,6 +2,8 @@ import { handleWebhook, retryFailedEmails } from './routes/webhook';
 import { handleForm } from './routes/form';
 import { handleResponse } from './routes/response';
 import { handleConfig } from './routes/config';
+import { runSpreadsheetSync } from './services/spreadsheet-sync';
+import { verifyBearerToken } from './middleware/auth';
 import type { Env } from './types';
 
 export default {
@@ -36,6 +38,14 @@ export default {
       if (method === 'GET' && path === '/nps/config') {
         return handleConfig(env);
       }
+      if (method === 'POST' && path === '/nps/sync') {
+        const authError = verifyBearerToken(request, env);
+        if (authError) return authError;
+        await runSpreadsheetSync(env);
+        return new Response(JSON.stringify({ ok: true, message: 'Spreadsheet sync completed' }), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
 
       return new Response('Not Found', { status: 404 });
     } catch (e) {
@@ -47,7 +57,8 @@ export default {
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
     switch (event.cron) {
       case '0 * * * *':
-        // 毎時: Spreadsheet → D1 config 同期（Phase 5 で実装）
+        // 毎時: Spreadsheet → D1 config 同期
+        ctx.waitUntil(runSpreadsheetSync(env));
         break;
       case '0 18 * * *':
         // 毎日 18:00 UTC: D1 → BigQuery Sync（Phase 6 で実装）+ 失敗メールリトライ
