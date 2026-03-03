@@ -39,21 +39,43 @@ resource "google_service_account" "bigquery_writer" {
 
 resource "google_service_account_key" "sheets_reader" {
   service_account_id = google_service_account.sheets_reader.name
+  keepers = {
+    rotation = var.sa_key_rotation_id
+  }
 }
 
 resource "google_service_account_key" "bigquery_writer" {
   service_account_id = google_service_account.bigquery_writer.name
+  keepers = {
+    rotation = var.sa_key_rotation_id
+  }
+}
+
+# ---------------------------------------------------------
+# BigQuery Dataset
+# ---------------------------------------------------------
+
+resource "google_bigquery_dataset" "nps" {
+  dataset_id = "nps_responses"
+  location   = var.gcp_region
+
+  access {
+    role          = "OWNER"
+    special_group = "projectOwners"
+  }
+
+  access {
+    role          = "WRITER"
+    user_by_email = google_service_account.bigquery_writer.email
+  }
 }
 
 # ---------------------------------------------------------
 # IAM Bindings
+#
+# bigquery.jobUser is project-level (required to run jobs).
+# Data access is scoped to the nps_responses dataset above.
 # ---------------------------------------------------------
-
-resource "google_project_iam_member" "bigquery_data_editor" {
-  project = var.gcp_project_id
-  role    = "roles/bigquery.dataEditor"
-  member  = "serviceAccount:${google_service_account.bigquery_writer.email}"
-}
 
 resource "google_project_iam_member" "bigquery_job_user" {
   project = var.gcp_project_id

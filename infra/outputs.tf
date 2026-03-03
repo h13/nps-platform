@@ -13,6 +13,15 @@ output "d1_staging_id" {
 }
 
 # ---------------------------------------------------------
+# BigQuery
+# ---------------------------------------------------------
+
+output "bigquery_dataset_id" {
+  description = "BigQuery dataset ID for NPS responses"
+  value       = google_bigquery_dataset.nps.dataset_id
+}
+
+# ---------------------------------------------------------
 # Service Account Emails
 # ---------------------------------------------------------
 

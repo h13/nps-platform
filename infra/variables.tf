@@ -43,3 +43,9 @@ variable "workers_staging_script_name" {
   type        = string
   default     = "nps-platform-staging"
 }
+
+variable "sa_key_rotation_id" {
+  description = "Change this value to trigger SA key rotation (e.g. '2026-03')"
+  type        = string
+  default     = "1"
+}
