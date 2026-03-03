@@ -1,4 +1,4 @@
-.PHONY: init plan apply output secrets fmt validate lint security check
+.PHONY: init plan apply output secrets fmt validate lint security check hooks
 
 init:
 	terraform init
@@ -29,3 +29,7 @@ security:
 	trivy config .
 
 check: fmt lint security
+
+hooks:
+	ln -sf ../../infra/scripts/pre-commit-terraform.sh ../.git/hooks/pre-commit.local
+	@echo "pre-commit.local hook installed."
