@@ -1,0 +1,5 @@
+gcp_project_id        = "your-gcp-project-id"
+gcp_region            = "asia-northeast1"
+cloudflare_account_id = "your-cloudflare-account-id"
+
+# cloudflare_api_token is passed via TF_VAR_cloudflare_api_token env var
