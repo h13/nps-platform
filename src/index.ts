@@ -2,7 +2,7 @@ import { handleWebhook, retryFailedEmails } from './routes/webhook';
 import { handleForm } from './routes/form';
 import { handleResponse } from './routes/response';
 import { handleConfig } from './routes/config';
-import { runSpreadsheetSync } from './services/spreadsheet-sync';
+import { syncSpreadsheetToD1, runSpreadsheetSync } from './services/spreadsheet-sync';
 import { verifyBearerToken } from './middleware/auth';
 import type { Env } from './types';
 
@@ -41,10 +41,19 @@ export default {
       if (method === 'POST' && path === '/nps/sync') {
         const authError = verifyBearerToken(request, env);
         if (authError) return authError;
-        await runSpreadsheetSync(env);
-        return new Response(JSON.stringify({ ok: true, message: 'Spreadsheet sync completed' }), {
-          headers: { 'Content-Type': 'application/json' },
-        });
+        try {
+          await syncSpreadsheetToD1(env);
+          return new Response(JSON.stringify({ ok: true, message: 'Spreadsheet sync completed' }), {
+            headers: { 'Content-Type': 'application/json' },
+          });
+        } catch (syncErr) {
+          const msg = syncErr instanceof Error ? syncErr.message : String(syncErr);
+          console.error('[Spreadsheet Sync]', msg);
+          return new Response(JSON.stringify({ ok: false, error: msg }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
       }
 
       return new Response('Not Found', { status: 404 });
