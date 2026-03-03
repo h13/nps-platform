@@ -1,0 +1,60 @@
+name = "nps-platform"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[triggers]
+crons = [
+  "0 * * * *",     # 毎時 00分: Spreadsheet → D1 config 同期
+  "0 18 * * *"     # 毎日 18:00 UTC (AM 3:00 JST): D1 → BigQuery Sync
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nps-platform"
+database_id = "local"
+
+[assets]
+directory = "./widget/dist"
+
+# 環境変数（非秘匿）- Production
+[vars]
+NPS_BASE_URL = "https://nps.example.com"
+NPS_SURVEY_EXPIRY_DAYS = "30"
+SENDGRID_FROM_ADDRESS = "noreply@nps.example.com"
+SENDGRID_FROM_NAME = "NPS アンケート"
+SPREADSHEET_ID = "<Google Spreadsheet ID>"
+
+# --- Staging 環境 ---
+[env.staging]
+name = "nps-platform-staging"
+
+[env.staging.triggers]
+crons = [
+  "0 * * * *",
+  "0 18 * * *"
+]
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "nps-platform-staging"
+database_id = "<staging-db-id>"
+
+[env.staging.vars]
+NPS_BASE_URL = "https://nps-staging.example.com"
+NPS_SURVEY_EXPIRY_DAYS = "30"
+SENDGRID_FROM_ADDRESS = "noreply-staging@nps.example.com"
+SENDGRID_FROM_NAME = "NPS アンケート [STAGING]"
+SPREADSHEET_ID = "<Staging 用 Spreadsheet ID>"
+
+# 秘匿情報は wrangler secret で登録（環境ごとに設定）
+# Production:
+#   wrangler secret put NPS_API_KEY
+#   wrangler secret put SENDGRID_API_KEY
+#   wrangler secret put GOOGLE_SERVICE_ACCOUNT_JSON
+#   wrangler secret put BQ_SERVICE_ACCOUNT_JSON
+#   wrangler secret put SLACK_WEBHOOK_URL
+# Staging:
+#   wrangler secret put NPS_API_KEY --env staging
+#   wrangler secret put SENDGRID_API_KEY --env staging
+#   wrangler secret put GOOGLE_SERVICE_ACCOUNT_JSON --env staging
+#   wrangler secret put SLACK_WEBHOOK_URL --env staging
