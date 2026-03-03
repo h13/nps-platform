@@ -22,7 +22,7 @@ export function verifyBearerToken(request: Request, env: Env): Response | null {
   }
 
   const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer' || !constantTimeEqual(parts[1], env.NPS_API_KEY)) {
+  if (parts.length !== 2 || parts[0] !== 'Bearer' || !env.NPS_API_KEY || !constantTimeEqual(parts[1], env.NPS_API_KEY)) {
     return new Response(
       JSON.stringify({ error: 'Invalid token' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
