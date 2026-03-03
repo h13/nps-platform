@@ -2,5 +2,5 @@ node_modules/
 .wrangler/
 .dev.vars
 dist/
-widget/dist/
+!widget/dist/
 *.log
