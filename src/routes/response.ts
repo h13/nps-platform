@@ -8,6 +8,75 @@ function corsHeaders(): Record<string, string> {
   };
 }
 
+function validateNpsScore(
+  id: string,
+  value: unknown,
+  sanitized: Record<string, unknown>,
+  errors: string[],
+): void {
+  const num = Number(value);
+  if (!Number.isInteger(num) || num < 0 || num > 10) {
+    errors.push(`${id} must be an integer between 0 and 10`);
+  } else {
+    sanitized[id] = num;
+  }
+}
+
+function validateRating(
+  id: string,
+  value: unknown,
+  minValue: number,
+  maxValue: number,
+  sanitized: Record<string, unknown>,
+  errors: string[],
+): void {
+  const num = Number(value);
+  if (!Number.isInteger(num) || num < minValue || num > maxValue) {
+    errors.push(`${id} must be an integer between ${minValue} and ${maxValue}`);
+  } else {
+    sanitized[id] = num;
+  }
+}
+
+function validateFreeText(
+  id: string,
+  value: unknown,
+  maxLength: number | undefined,
+  sanitized: Record<string, unknown>,
+): void {
+  let text = String(value);
+  if (maxLength && text.length > maxLength) {
+    text = text.slice(0, maxLength);
+  }
+  sanitized[id] = text;
+}
+
+function validateSingleChoice(
+  id: string,
+  value: unknown,
+  options: { value: string }[],
+  sanitized: Record<string, unknown>,
+): void {
+  const validValues = options.map((o) => o.value);
+  if (validValues.includes(String(value))) {
+    sanitized[id] = String(value);
+  }
+}
+
+function validateMultiSelect(
+  id: string,
+  value: unknown,
+  options: { value: string }[],
+  sanitized: Record<string, unknown>,
+): void {
+  const validValues = options.map((o) => o.value);
+  const arr = Array.isArray(value) ? value : [];
+  const filtered = arr.map(String).filter((v) => validValues.includes(v));
+  if (filtered.length > 0) {
+    sanitized[id] = filtered;
+  }
+}
+
 export function validateAnswers(
   answers: Record<string, unknown>,
   questions: Question[],
@@ -26,57 +95,120 @@ export function validateAnswers(
     if (missing) continue;
 
     switch (question.type) {
-      case 'nps_score': {
-        const num = Number(value);
-        if (!Number.isInteger(num) || num < 0 || num > 10) {
-          errors.push(`${question.id} must be an integer between 0 and 10`);
-        } else {
-          sanitized[question.id] = num;
-        }
+      case 'nps_score':
+        validateNpsScore(question.id, value, sanitized, errors);
         break;
-      }
-      case 'rating': {
-        const num = Number(value);
-        const min = question.min_value ?? 1;
-        const max = question.max_value ?? 5;
-        if (!Number.isInteger(num) || num < min || num > max) {
-          errors.push(`${question.id} must be an integer between ${min} and ${max}`);
-        } else {
-          sanitized[question.id] = num;
-        }
+      case 'rating':
+        validateRating(
+          question.id,
+          value,
+          question.min_value ?? 1,
+          question.max_value ?? 5,
+          sanitized,
+          errors,
+        );
         break;
-      }
-      case 'free_text': {
-        let text = String(value);
-        if (question.max_length && text.length > question.max_length) {
-          text = text.slice(0, question.max_length);
-        }
-        sanitized[question.id] = text;
+      case 'free_text':
+        validateFreeText(question.id, value, question.max_length, sanitized);
         break;
-      }
       case 'single_select':
-      case 'radio': {
-        const validValues = (question.options ?? []).map((o) => o.value);
-        if (validValues.includes(String(value))) {
-          sanitized[question.id] = String(value);
-        }
+      case 'radio':
+        validateSingleChoice(question.id, value, question.options ?? [], sanitized);
         break;
-      }
-      case 'multi_select': {
-        const validValues = (question.options ?? []).map((o) => o.value);
-        const arr = Array.isArray(value) ? value : [];
-        const filtered = arr.map(String).filter((v) => validValues.includes(v));
-        if (filtered.length > 0) {
-          sanitized[question.id] = filtered;
-        }
+      case 'multi_select':
+        validateMultiSelect(question.id, value, question.options ?? [], sanitized);
         break;
-      }
     }
   }
 
-  // config に存在しない question_id は無視（sanitized に含めない）
-
   return { sanitized, errors };
+}
+
+async function loadSurveyConfig(db: D1Database): Promise<SurveyConfig | null> {
+  const row = await db
+    .prepare('SELECT config_json FROM survey_config WHERE id = 1')
+    .first<{ config_json: string }>();
+
+  if (!row) return null;
+
+  return JSON.parse(row.config_json) as SurveyConfig;
+}
+
+interface TokenContext {
+  surveyRequestId: number;
+  stage: string;
+  opportunityId: string;
+}
+
+async function resolveTokenContext(
+  db: D1Database,
+  token: string,
+): Promise<TokenContext | Response> {
+  const row = await db
+    .prepare(
+      'SELECT id, stage, opportunity_id, status FROM nps_survey_requests WHERE token = ?',
+    )
+    .bind(token)
+    .first<{ id: number; stage: string; opportunity_id: string; status: string }>();
+
+  if (!row) {
+    return new Response(JSON.stringify({ error: 'Invalid token' }), {
+      status: 404,
+      headers: corsHeaders(),
+    });
+  }
+
+  if (row.status === 'responded') {
+    return new Response(JSON.stringify({ error: 'Already responded' }), {
+      status: 409,
+      headers: corsHeaders(),
+    });
+  }
+
+  return { surveyRequestId: row.id, stage: row.stage, opportunityId: row.opportunity_id };
+}
+
+interface InsertResponseParams {
+  surveyRequestId: number | null;
+  channel: string;
+  npsScore: number | null;
+  segment: string | null;
+  sanitized: Record<string, unknown>;
+  body: NpsResponsePayload;
+  stage: string | null;
+  opportunityId: string | null;
+}
+
+async function insertResponse(db: D1Database, params: InsertResponseParams): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO nps_responses
+     (survey_request_id, channel, nps_score, segment, answers, page_url, scroll_percent, dwell_seconds, user_agent, stage, opportunity_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      params.surveyRequestId,
+      params.channel,
+      params.npsScore,
+      params.segment,
+      JSON.stringify(params.sanitized),
+      params.body.page_url ?? null,
+      params.body.scroll_percent ?? null,
+      params.body.dwell_seconds ?? null,
+      params.body.user_agent ?? null,
+      params.stage,
+      params.opportunityId,
+    )
+    .run();
+
+  if (params.channel === 'email' && params.surveyRequestId) {
+    await db
+      .prepare(
+        "UPDATE nps_survey_requests SET status = 'responded', responded_at = datetime('now'), updated_at = datetime('now') WHERE id = ?",
+      )
+      .bind(params.surveyRequestId)
+      .run();
+  }
 }
 
 export async function handleResponse(request: Request, env: Env): Promise<Response> {
@@ -97,26 +229,23 @@ export async function handleResponse(request: Request, env: Env): Promise<Respon
     });
   }
 
-  const configRow = await env.DB.prepare(
-    'SELECT config_json FROM survey_config WHERE id = 1',
-  ).first<{ config_json: string }>();
-
-  if (!configRow) {
-    return new Response(JSON.stringify({ error: 'Config not found' }), {
-      status: 500,
-      headers: corsHeaders(),
-    });
-  }
-
   let config: SurveyConfig;
   try {
-    config = JSON.parse(configRow.config_json);
+    const loaded = await loadSurveyConfig(env.DB);
+    if (!loaded) {
+      return new Response(JSON.stringify({ error: 'Config not found' }), {
+        status: 500,
+        headers: corsHeaders(),
+      });
+    }
+    config = loaded;
   } catch {
     return new Response(JSON.stringify({ error: 'Survey configuration is invalid' }), {
       status: 500,
       headers: corsHeaders(),
     });
   }
+
   const { sanitized, errors } = validateAnswers(body.answers, config.questions);
 
   if (errors.length > 0) {
@@ -141,58 +270,23 @@ export async function handleResponse(request: Request, env: Env): Promise<Respon
   let opportunityId: string | null = null;
 
   if (hasToken) {
-    const row = await env.DB.prepare(
-      'SELECT id, stage, opportunity_id, status FROM nps_survey_requests WHERE token = ?',
-    )
-      .bind(body.token)
-      .first<{ id: number; stage: string; opportunity_id: string; status: string }>();
-
-    if (!row) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 404,
-        headers: corsHeaders(),
-      });
-    }
-
-    if (row.status === 'responded') {
-      return new Response(JSON.stringify({ error: 'Already responded' }), {
-        status: 409,
-        headers: corsHeaders(),
-      });
-    }
-
-    surveyRequestId = row.id;
-    stage = row.stage;
-    opportunityId = row.opportunity_id;
+    const result = await resolveTokenContext(env.DB, body.token as string);
+    if (result instanceof Response) return result;
+    surveyRequestId = result.surveyRequestId;
+    stage = result.stage;
+    opportunityId = result.opportunityId;
   }
 
-  await env.DB.prepare(
-    `INSERT INTO nps_responses
-     (survey_request_id, channel, nps_score, segment, answers, page_url, scroll_percent, dwell_seconds, user_agent, stage, opportunity_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  )
-    .bind(
-      surveyRequestId,
-      channel,
-      npsScore,
-      segment,
-      JSON.stringify(sanitized),
-      body.page_url ?? null,
-      body.scroll_percent ?? null,
-      body.dwell_seconds ?? null,
-      body.user_agent ?? null,
-      stage,
-      opportunityId,
-    )
-    .run();
-
-  if (hasToken && surveyRequestId) {
-    await env.DB.prepare(
-      "UPDATE nps_survey_requests SET status = 'responded', responded_at = datetime('now'), updated_at = datetime('now') WHERE id = ?",
-    )
-      .bind(surveyRequestId)
-      .run();
-  }
+  await insertResponse(env.DB, {
+    surveyRequestId,
+    channel,
+    npsScore,
+    segment,
+    sanitized,
+    body,
+    stage,
+    opportunityId,
+  });
 
   return new Response(JSON.stringify({ status: 'created', segment }), {
     status: 201,

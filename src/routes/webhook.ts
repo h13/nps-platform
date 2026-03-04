@@ -3,20 +3,35 @@ import { sendMail } from '../services/sendgrid';
 import { renderEmailSubject, renderEmailHtml } from '../templates/email';
 import type { Env, WebhookPayload, SurveyConfig } from '../types';
 
-export async function handleWebhook(request: Request, env: Env): Promise<Response> {
-  const authError = verifyBearerToken(request, env);
-  if (authError) return authError;
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
-  let body: WebhookPayload;
+const DEFAULT_SURVEY_CONFIG: SurveyConfig = {
+  survey_title: 'アンケート',
+  thanks_message: '',
+  email_subject_template: '{survey_title}',
+  widget_primary_color: '#2563EB',
+  widget_bg_color: '#FFFFFF',
+  widget_text_color: '#1F2937',
+  questions: [],
+};
+
+async function loadOrDefaultConfig(db: D1Database): Promise<SurveyConfig> {
+  const row = await db
+    .prepare('SELECT config_json FROM survey_config WHERE id = 1')
+    .first<{ config_json: string }>();
+
+  if (!row) return { ...DEFAULT_SURVEY_CONFIG };
+
   try {
-    body = (await request.json()) as WebhookPayload;
+    return JSON.parse(row.config_json) as SurveyConfig;
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return { ...DEFAULT_SURVEY_CONFIG };
   }
+}
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateWebhookPayload(body: WebhookPayload): Response | null {
   const { opportunity_id, account_id, account_name, stage, contact_email, contact_name } = body;
   if (
     !opportunity_id ||
@@ -31,17 +46,38 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
         error:
           'Missing required fields: opportunity_id, account_id, account_name, stage, contact_email, contact_name',
       }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
+      { status: 400, headers: JSON_HEADERS },
     );
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(contact_email)) {
+  if (!EMAIL_REGEX.test(contact_email)) {
     return new Response(JSON.stringify({ error: 'Invalid contact_email format' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     });
   }
+
+  return null;
+}
+
+export async function handleWebhook(request: Request, env: Env): Promise<Response> {
+  const authError = verifyBearerToken(request, env);
+  if (authError) return authError;
+
+  let body: WebhookPayload;
+  try {
+    body = (await request.json()) as WebhookPayload;
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+      status: 400,
+      headers: JSON_HEADERS,
+    });
+  }
+
+  const validationError = validateWebhookPayload(body);
+  if (validationError) return validationError;
+
+  const { opportunity_id, account_id, account_name, stage, contact_email, contact_name } = body;
 
   const duplicate = await env.DB.prepare(
     `SELECT id FROM nps_survey_requests
@@ -54,7 +90,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
   if (duplicate) {
     return new Response(JSON.stringify({ status: 'skipped', reason: 'duplicate' }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     });
   }
 
@@ -82,34 +118,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
     )
     .run();
 
-  const configRow = await env.DB.prepare(
-    'SELECT config_json FROM survey_config WHERE id = 1',
-  ).first<{ config_json: string }>();
-
-  let config: SurveyConfig;
-  try {
-    config = configRow
-      ? JSON.parse(configRow.config_json)
-      : {
-          survey_title: 'アンケート',
-          thanks_message: '',
-          email_subject_template: '{survey_title}',
-          widget_primary_color: '#2563EB',
-          widget_bg_color: '#FFFFFF',
-          widget_text_color: '#1F2937',
-          questions: [],
-        };
-  } catch {
-    config = {
-      survey_title: 'アンケート',
-      thanks_message: '',
-      email_subject_template: '{survey_title}',
-      widget_primary_color: '#2563EB',
-      widget_bg_color: '#FFFFFF',
-      widget_text_color: '#1F2937',
-      questions: [],
-    };
-  }
+  const config = await loadOrDefaultConfig(env.DB);
 
   const subject = renderEmailSubject(config.email_subject_template || '{survey_title}', {
     account_name,
@@ -149,7 +158,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
 
   return new Response(JSON.stringify({ status: 'accepted', token }), {
     status: 202,
-    headers: { 'Content-Type': 'application/json' },
+    headers: JSON_HEADERS,
   });
 }
 
@@ -170,34 +179,7 @@ export async function retryFailedEmails(env: Env): Promise<void> {
 
   if (!rows.results || rows.results.length === 0) return;
 
-  const configRow = await env.DB.prepare(
-    'SELECT config_json FROM survey_config WHERE id = 1',
-  ).first<{ config_json: string }>();
-
-  let config: SurveyConfig;
-  try {
-    config = configRow
-      ? JSON.parse(configRow.config_json)
-      : {
-          survey_title: 'アンケート',
-          thanks_message: '',
-          email_subject_template: '{survey_title}',
-          widget_primary_color: '#2563EB',
-          widget_bg_color: '#FFFFFF',
-          widget_text_color: '#1F2937',
-          questions: [],
-        };
-  } catch {
-    config = {
-      survey_title: 'アンケート',
-      thanks_message: '',
-      email_subject_template: '{survey_title}',
-      widget_primary_color: '#2563EB',
-      widget_bg_color: '#FFFFFF',
-      widget_text_color: '#1F2937',
-      questions: [],
-    };
-  }
+  const config = await loadOrDefaultConfig(env.DB);
 
   for (const row of rows.results) {
     try {

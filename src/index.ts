@@ -6,6 +6,25 @@ import { syncSpreadsheetToD1, runSpreadsheetSync } from './services/spreadsheet-
 import { verifyBearerToken } from './middleware/auth';
 import type { Env } from './types';
 
+async function handleSync(request: Request, env: Env): Promise<Response> {
+  const authError = verifyBearerToken(request, env);
+  if (authError) return authError;
+
+  try {
+    await syncSpreadsheetToD1(env);
+    return new Response(JSON.stringify({ ok: true, message: 'Spreadsheet sync completed' }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (syncErr) {
+    const msg = syncErr instanceof Error ? syncErr.message : String(syncErr);
+    console.error('[Spreadsheet Sync]', msg);
+    return new Response(JSON.stringify({ ok: false, error: msg }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -39,21 +58,7 @@ export default {
         return handleConfig(env);
       }
       if (method === 'POST' && path === '/nps/sync') {
-        const authError = verifyBearerToken(request, env);
-        if (authError) return authError;
-        try {
-          await syncSpreadsheetToD1(env);
-          return new Response(JSON.stringify({ ok: true, message: 'Spreadsheet sync completed' }), {
-            headers: { 'Content-Type': 'application/json' },
-          });
-        } catch (syncErr) {
-          const msg = syncErr instanceof Error ? syncErr.message : String(syncErr);
-          console.error('[Spreadsheet Sync]', msg);
-          return new Response(JSON.stringify({ ok: false, error: msg }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
+        return handleSync(request, env);
       }
 
       return new Response('Not Found', { status: 404 });
