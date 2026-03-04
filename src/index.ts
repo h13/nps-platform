@@ -68,7 +68,7 @@ export default {
     }
   },
 
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext) {
     switch (event.cron) {
       case '0 * * * *':
         // 毎時: Spreadsheet → D1 config 同期

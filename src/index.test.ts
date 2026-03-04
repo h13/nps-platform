@@ -148,8 +148,8 @@ describe('Worker router', () => {
         true,
         ['sign', 'verify'],
       );
-      const pkcs8 = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
-      const pemBase64 = btoa(String.fromCharCode(...new Uint8Array(pkcs8)));
+      const pkcs8 = await crypto.subtle.exportKey('pkcs8', (keyPair as CryptoKeyPair).privateKey);
+      const pemBase64 = btoa(String.fromCharCode(...new Uint8Array(pkcs8 as ArrayBuffer)));
       const pem = `-----BEGIN PRIVATE KEY-----\n${pemBase64}\n-----END PRIVATE KEY-----`;
 
       const testEnv = {
