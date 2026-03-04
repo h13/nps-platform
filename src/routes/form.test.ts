@@ -38,6 +38,11 @@ describe('GET /nps/form/:token', () => {
     ).run();
   });
 
+  it('returns 404 for empty token', async () => {
+    const res = await SELF.fetch('https://example.com/nps/form/');
+    expect(res.status).toBe(404);
+  });
+
   it('returns 404 for unknown token', async () => {
     const res = await SELF.fetch('https://example.com/nps/form/nonexistent');
     expect(res.status).toBe(404);
