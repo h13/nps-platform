@@ -145,9 +145,7 @@ async function resolveTokenContext(
   token: string,
 ): Promise<TokenContext | Response> {
   const row = await db
-    .prepare(
-      'SELECT id, stage, opportunity_id, status FROM nps_survey_requests WHERE token = ?',
-    )
+    .prepare('SELECT id, stage, opportunity_id, status FROM nps_survey_requests WHERE token = ?')
     .bind(token)
     .first<{ id: number; stage: string; opportunity_id: string; status: string }>();
 

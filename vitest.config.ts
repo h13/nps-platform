@@ -10,6 +10,7 @@ export default defineWorkersConfig({
     },
     coverage: {
       provider: 'istanbul',
+      reporter: ['text', 'lcov'],
       include: ['src/**/*.ts'],
       exclude: ['src/**/*.test.ts', 'src/templates/**', 'src/env.d.ts', 'src/test-helpers/**'],
       thresholds: {

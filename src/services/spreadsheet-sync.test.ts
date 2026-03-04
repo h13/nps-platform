@@ -423,7 +423,20 @@ describe('syncSpreadsheetToD1', () => {
   it('throws when no active questions are found', async () => {
     const pem = await generateTestPem();
     const sheetsBody = mockSheetsResponse([
-      ['id', 'type', 'text', 'required', 'is_active', 'display_order', 'placeholder', 'max_length', 'min_value', 'max_value', 'min_label', 'max_label'],
+      [
+        'id',
+        'type',
+        'text',
+        'required',
+        'is_active',
+        'display_order',
+        'placeholder',
+        'max_length',
+        'min_value',
+        'max_value',
+        'min_label',
+        'max_label',
+      ],
       ['nps', 'nps_score', 'Score?', 'TRUE', 'FALSE', '1', '', '', '', '', '', ''],
     ]);
     setupFetchMocks(sheetsBody);
@@ -437,9 +450,7 @@ describe('syncSpreadsheetToD1', () => {
       SPREADSHEET_ID: 'test-id',
     };
 
-    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow(
-      'no active questions',
-    );
+    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('no active questions');
     fetchMock.deactivate();
   });
 
@@ -473,11 +484,9 @@ describe('syncSpreadsheetToD1', () => {
     fetchMock
       .get('https://oauth2.googleapis.com')
       .intercept({ path: '/token', method: 'POST' })
-      .reply(
-        200,
-        JSON.stringify({ access_token: 't', token_type: 'Bearer', expires_in: 3600 }),
-        { headers: { 'Content-Type': 'application/json' } },
-      );
+      .reply(200, JSON.stringify({ access_token: 't', token_type: 'Bearer', expires_in: 3600 }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
 
     fetchMock
       .get('https://sheets.googleapis.com')
@@ -501,7 +510,20 @@ describe('syncSpreadsheetToD1', () => {
   it('writes config to D1 on success', async () => {
     const pem = await generateTestPem();
     const sheetsBody = mockSheetsResponse([
-      ['id', 'type', 'text', 'required', 'is_active', 'display_order', 'placeholder', 'max_length', 'min_value', 'max_value', 'min_label', 'max_label'],
+      [
+        'id',
+        'type',
+        'text',
+        'required',
+        'is_active',
+        'display_order',
+        'placeholder',
+        'max_length',
+        'min_value',
+        'max_value',
+        'min_label',
+        'max_label',
+      ],
       ['nps', 'nps_score', 'Score?', 'TRUE', 'TRUE', '1', '', '', '', '', '', ''],
     ]);
     setupFetchMocks(sheetsBody);

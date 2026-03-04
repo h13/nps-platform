@@ -163,7 +163,8 @@ describe('widget init', () => {
   });
 
   it('onSubmit posts response and stores responded timestamp', async () => {
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(MOCK_CONFIG) })
       .mockResolvedValueOnce({ ok: true });
     vi.stubGlobal('fetch', mockFetch);
@@ -196,7 +197,8 @@ describe('widget init', () => {
   });
 
   it('onSubmit throws on non-ok response', async () => {
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(MOCK_CONFIG) })
       .mockResolvedValueOnce({ ok: false, status: 500 });
     vi.stubGlobal('fetch', mockFetch);
@@ -214,7 +216,9 @@ describe('widget init', () => {
     triggerCallback();
 
     const popupCallbacks = (showPopup as ReturnType<typeof vi.fn>).mock.calls[0][1];
-    await expect(popupCallbacks.onSubmit({ nps: 5 })).rejects.toThrow('Response submit failed: 500');
+    await expect(popupCallbacks.onSubmit({ nps: 5 })).rejects.toThrow(
+      'Response submit failed: 500',
+    );
   });
 
   it('onClose removes popup and cleans up trigger', async () => {
@@ -247,10 +251,7 @@ describe('widget init', () => {
 
   it('logs error on fetch failure', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({ ok: false, status: 500 }),
-    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
     setWidgetConfig();
     await import('./widget');
 
@@ -326,7 +327,8 @@ describe('widget init', () => {
   });
 
   it('tracks scroll percentage via scroll events', async () => {
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(MOCK_CONFIG) })
       .mockResolvedValueOnce({ ok: true });
     vi.stubGlobal('fetch', mockFetch);

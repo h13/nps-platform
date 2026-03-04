@@ -107,11 +107,7 @@ function validateForm(
   return valid;
 }
 
-function showThanksScreen(
-  overlay: HTMLElement,
-  thanksMessage: string,
-  onClose: () => void,
-): void {
+function showThanksScreen(overlay: HTMLElement, thanksMessage: string, onClose: () => void): void {
   overlay.innerHTML = '';
   const thanks = document.createElement('div');
   thanks.className = 'thanks';
