@@ -2,11 +2,13 @@ import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { env, SELF } from 'cloudflare:test';
 import { setupTestDb } from '../test-helpers/setup-db';
 
-async function seedSurveyRequest(overrides: Partial<{
-  token: string;
-  status: string;
-  expires_at: string;
-}> = {}) {
+async function seedSurveyRequest(
+  overrides: Partial<{
+    token: string;
+    status: string;
+    expires_at: string;
+  }> = {},
+) {
   const token = overrides.token ?? 'test-token-123';
   const status = overrides.status ?? 'sent';
   const expiresAt = overrides.expires_at ?? new Date(Date.now() + 86400000).toISOString();
@@ -14,8 +16,10 @@ async function seedSurveyRequest(overrides: Partial<{
   await env.DB.prepare(
     `INSERT INTO nps_survey_requests
      (token, opportunity_id, account_id, account_name, stage, contact_email, contact_name, status, expires_at)
-     VALUES (?, 'opp-1', 'acc-1', 'Test Corp', 'closed_won', 'test@example.com', 'Test User', ?, ?)`
-  ).bind(token, status, expiresAt).run();
+     VALUES (?, 'opp-1', 'acc-1', 'Test Corp', 'closed_won', 'test@example.com', 'Test User', ?, ?)`,
+  )
+    .bind(token, status, expiresAt)
+    .run();
 }
 
 describe('GET /nps/form/:token', () => {
@@ -30,7 +34,7 @@ describe('GET /nps/form/:token', () => {
 
     await env.DB.prepare(
       `INSERT INTO survey_config (id, config_json, updated_at)
-       VALUES (1, '{"survey_title":"Test","questions":[]}', datetime('now'))`
+       VALUES (1, '{"survey_title":"Test","questions":[]}', datetime('now'))`,
     ).run();
   });
 
@@ -73,9 +77,9 @@ describe('GET /nps/form/:token', () => {
 
     await SELF.fetch('https://example.com/nps/form/open-token');
 
-    const row = await env.DB.prepare(
-      'SELECT status FROM nps_survey_requests WHERE token = ?'
-    ).bind('open-token').first<{ status: string }>();
+    const row = await env.DB.prepare('SELECT status FROM nps_survey_requests WHERE token = ?')
+      .bind('open-token')
+      .first<{ status: string }>();
     expect(row!.status).toBe('opened');
   });
 });

@@ -81,10 +81,15 @@ function setLocalStorage(key: string, value: string): void {
       let cleanupTrigger: (() => void) | null = null;
 
       // Track scroll for metadata
-      window.addEventListener('scroll', () => {
-        const current = ((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100;
-        if (current > scrollPercent) scrollPercent = current;
-      }, { passive: true });
+      window.addEventListener(
+        'scroll',
+        () => {
+          const current =
+            ((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100;
+          if (current > scrollPercent) scrollPercent = current;
+        },
+        { passive: true },
+      );
 
       function showWidget(): void {
         if (popupHost) return;
@@ -113,6 +118,10 @@ function setLocalStorage(key: string, value: string): void {
             setLocalStorage(LS_RESPONDED, String(Date.now()));
           },
           onClose: () => {
+            if (cleanupTrigger) {
+              cleanupTrigger();
+              cleanupTrigger = null;
+            }
             if (popupHost) {
               popupHost.remove();
               popupHost = null;

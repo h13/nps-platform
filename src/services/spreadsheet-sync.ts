@@ -101,11 +101,7 @@ async function getAccessToken(serviceAccount: ServiceAccountKey): Promise<string
 // --- Sheets API ---
 
 async function fetchSheets(accessToken: string, spreadsheetId: string): Promise<BatchGetResponse> {
-  const ranges = [
-    'questions!A:L',
-    'options!A:E',
-    'config!A:B',
-  ];
+  const ranges = ['questions!A:L', 'options!A:E', 'config!A:B'];
   const params = ranges.map((r) => `ranges=${encodeURIComponent(r)}`).join('&');
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${params}`;
 
@@ -142,7 +138,7 @@ export function parseBool(value: string): boolean {
 export function parseOptionalInt(value: string): number | undefined {
   if (value === '') return undefined;
   const n = parseInt(value, 10);
-  return isNaN(n) ? undefined : n;
+  return Number.isNaN(n) ? undefined : n;
 }
 
 export function parseQuestions(rows: Record<string, string>[]): Omit<Question, 'options'>[] {
@@ -260,7 +256,9 @@ export async function syncSpreadsheetToD1(env: Env): Promise<void> {
   const config = buildSurveyConfig(questionRows, optionRows, configRows);
 
   if (config.questions.length === 0) {
-    throw new Error('Parsed config has no active questions — aborting sync to preserve existing data');
+    throw new Error(
+      'Parsed config has no active questions — aborting sync to preserve existing data',
+    );
   }
 
   await env.DB.prepare(

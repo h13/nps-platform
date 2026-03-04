@@ -8,7 +8,7 @@ interface EmailParams {
 
 export function renderEmailSubject(
   template: string,
-  vars: { account_name: string; survey_title: string; contact_name: string }
+  vars: { account_name: string; survey_title: string; contact_name: string },
 ): string {
   return template
     .replace('{account_name}', vars.account_name)

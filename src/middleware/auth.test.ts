@@ -19,7 +19,7 @@ describe('verifyBearerToken', () => {
     const result = verifyBearerToken(makeRequest(), makeEnv());
     expect(result).not.toBeNull();
     expect(result!.status).toBe(401);
-    const body = await result!.json() as { error: string };
+    const body = (await result!.json()) as { error: string };
     expect(body.error).toBe('Authorization header required');
   });
 
@@ -27,7 +27,7 @@ describe('verifyBearerToken', () => {
     const result = verifyBearerToken(makeRequest('Basic abc'), makeEnv());
     expect(result).not.toBeNull();
     expect(result!.status).toBe(401);
-    const body = await result!.json() as { error: string };
+    const body = (await result!.json()) as { error: string };
     expect(body.error).toBe('Invalid token');
   });
 

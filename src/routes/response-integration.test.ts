@@ -50,8 +50,10 @@ describe('POST /nps/response', () => {
     await env.DB.exec('DELETE FROM survey_config');
 
     await env.DB.prepare(
-      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, ?, datetime('now'))`
-    ).bind(JSON.stringify(config)).run();
+      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, ?, datetime('now'))`,
+    )
+      .bind(JSON.stringify(config))
+      .run();
   });
 
   it('returns 400 for invalid JSON', async () => {
@@ -66,14 +68,14 @@ describe('POST /nps/response', () => {
   it('returns 400 when answers is missing', async () => {
     const res = await responseRequest({});
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toBe('answers is required');
   });
 
   it('returns 400 when required nps_score is missing', async () => {
     const res = await responseRequest({ answers: {} });
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string; details: string[] };
+    const body = (await res.json()) as { error: string; details: string[] };
     expect(body.details).toContain('nps is required');
   });
 
@@ -83,14 +85,17 @@ describe('POST /nps/response', () => {
       page_url: 'https://example.com',
     });
     expect(res.status).toBe(201);
-    const body = await res.json() as { status: string; segment: string };
+    const body = (await res.json()) as { status: string; segment: string };
     expect(body.status).toBe('created');
     expect(body.segment).toBe('promoter');
 
     // Verify DB
-    const row = await env.DB.prepare(
-      'SELECT * FROM nps_responses ORDER BY id DESC LIMIT 1'
-    ).first<{ channel: string; nps_score: number; segment: string; page_url: string }>();
+    const row = await env.DB.prepare('SELECT * FROM nps_responses ORDER BY id DESC LIMIT 1').first<{
+      channel: string;
+      nps_score: number;
+      segment: string;
+      page_url: string;
+    }>();
     expect(row!.channel).toBe('lp');
     expect(row!.nps_score).toBe(9);
     expect(row!.segment).toBe('promoter');
@@ -101,21 +106,23 @@ describe('POST /nps/response', () => {
     await env.DB.prepare(
       `INSERT INTO nps_survey_requests
        (token, opportunity_id, account_id, account_name, stage, contact_email, contact_name, status, expires_at)
-       VALUES ('tok-123', 'opp-1', 'acc-1', 'Corp', 'closed_won', 'a@b.com', 'Alice', 'sent', ?)`
-    ).bind(new Date(Date.now() + 86400000).toISOString()).run();
+       VALUES ('tok-123', 'opp-1', 'acc-1', 'Corp', 'closed_won', 'a@b.com', 'Alice', 'sent', ?)`,
+    )
+      .bind(new Date(Date.now() + 86400000).toISOString())
+      .run();
 
     const res = await responseRequest({
       token: 'tok-123',
       answers: { nps: 5 },
     });
     expect(res.status).toBe(201);
-    const body = await res.json() as { segment: string };
+    const body = (await res.json()) as { segment: string };
     expect(body.segment).toBe('detractor');
 
     // Verify survey request status updated
-    const req = await env.DB.prepare(
-      'SELECT status FROM nps_survey_requests WHERE token = ?'
-    ).bind('tok-123').first<{ status: string }>();
+    const req = await env.DB.prepare('SELECT status FROM nps_survey_requests WHERE token = ?')
+      .bind('tok-123')
+      .first<{ status: string }>();
     expect(req!.status).toBe('responded');
   });
 
@@ -131,8 +138,10 @@ describe('POST /nps/response', () => {
     await env.DB.prepare(
       `INSERT INTO nps_survey_requests
        (token, opportunity_id, account_id, account_name, stage, contact_email, contact_name, status, expires_at)
-       VALUES ('used-tok', 'opp-2', 'acc-2', 'Corp', 'closed_won', 'a@b.com', 'Alice', 'responded', ?)`
-    ).bind(new Date(Date.now() + 86400000).toISOString()).run();
+       VALUES ('used-tok', 'opp-2', 'acc-2', 'Corp', 'closed_won', 'a@b.com', 'Alice', 'responded', ?)`,
+    )
+      .bind(new Date(Date.now() + 86400000).toISOString())
+      .run();
 
     const res = await responseRequest({
       token: 'used-tok',
@@ -148,7 +157,7 @@ describe('POST /nps/response', () => {
     expect(res.status).toBe(201);
 
     const row = await env.DB.prepare(
-      'SELECT answers FROM nps_responses ORDER BY id DESC LIMIT 1'
+      'SELECT answers FROM nps_responses ORDER BY id DESC LIMIT 1',
     ).first<{ answers: string }>();
     const answers = JSON.parse(row!.answers);
     expect(answers.nps).toBe(7);

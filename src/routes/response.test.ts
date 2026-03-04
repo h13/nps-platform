@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { validateAnswers } from './response';
 import type { Question } from '../types';
 
-function makeQuestion(overrides: Partial<Question> & { id: string; type: Question['type'] }): Question {
+function makeQuestion(
+  overrides: Partial<Question> & { id: string; type: Question['type'] },
+): Question {
   return {
     text: 'Test question',
     required: false,
@@ -13,9 +15,7 @@ function makeQuestion(overrides: Partial<Question> & { id: string; type: Questio
 
 describe('validateAnswers', () => {
   describe('nps_score validation', () => {
-    const questions: Question[] = [
-      makeQuestion({ id: 'nps', type: 'nps_score', required: true }),
-    ];
+    const questions: Question[] = [makeQuestion({ id: 'nps', type: 'nps_score', required: true })];
 
     it('accepts valid score 0', () => {
       const { sanitized, errors } = validateAnswers({ nps: 0 }, questions);
@@ -52,9 +52,7 @@ describe('validateAnswers', () => {
   });
 
   describe('required field validation', () => {
-    const questions: Question[] = [
-      makeQuestion({ id: 'q1', type: 'free_text', required: true }),
-    ];
+    const questions: Question[] = [makeQuestion({ id: 'q1', type: 'free_text', required: true })];
 
     it('returns error when required field is missing', () => {
       const { errors } = validateAnswers({}, questions);
@@ -74,9 +72,7 @@ describe('validateAnswers', () => {
   });
 
   describe('optional field validation', () => {
-    const questions: Question[] = [
-      makeQuestion({ id: 'q1', type: 'free_text', required: false }),
-    ];
+    const questions: Question[] = [makeQuestion({ id: 'q1', type: 'free_text', required: false })];
 
     it('skips validation when optional field is missing', () => {
       const { sanitized, errors } = validateAnswers({}, questions);
@@ -87,9 +83,7 @@ describe('validateAnswers', () => {
 
   describe('free_text validation', () => {
     it('accepts and returns text', () => {
-      const questions: Question[] = [
-        makeQuestion({ id: 'comment', type: 'free_text' }),
-      ];
+      const questions: Question[] = [makeQuestion({ id: 'comment', type: 'free_text' })];
       const { sanitized, errors } = validateAnswers({ comment: 'Great!' }, questions);
       expect(errors).toEqual([]);
       expect(sanitized.comment).toBe('Great!');
@@ -126,9 +120,7 @@ describe('validateAnswers', () => {
     });
 
     it('uses default range 1-5 when not specified', () => {
-      const qs: Question[] = [
-        makeQuestion({ id: 'rate', type: 'rating' }),
-      ];
+      const qs: Question[] = [makeQuestion({ id: 'rate', type: 'rating' })];
       const { sanitized, errors } = validateAnswers({ rate: 3 }, qs);
       expect(errors).toEqual([]);
       expect(sanitized.rate).toBe(3);
@@ -209,9 +201,7 @@ describe('validateAnswers', () => {
 
   describe('unknown question ids', () => {
     it('ignores answers for questions not in config', () => {
-      const questions: Question[] = [
-        makeQuestion({ id: 'q1', type: 'free_text' }),
-      ];
+      const questions: Question[] = [makeQuestion({ id: 'q1', type: 'free_text' })];
       const { sanitized } = validateAnswers({ q1: 'hello', unknown: 'ignored' }, questions);
       expect(sanitized.q1).toBe('hello');
       expect(sanitized).not.toHaveProperty('unknown');

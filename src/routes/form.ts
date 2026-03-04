@@ -18,8 +18,10 @@ export async function handleForm(token: string, env: Env): Promise<Response> {
   }
 
   const row = await env.DB.prepare(
-    'SELECT id, token, status, expires_at, contact_name, account_name FROM nps_survey_requests WHERE token = ?'
-  ).bind(token).first<SurveyRequest>();
+    'SELECT id, token, status, expires_at, contact_name, account_name FROM nps_survey_requests WHERE token = ?',
+  )
+    .bind(token)
+    .first<SurveyRequest>();
 
   if (!row) {
     return new Response('Not Found', { status: 404 });
@@ -28,8 +30,10 @@ export async function handleForm(token: string, env: Env): Promise<Response> {
   if (new Date(row.expires_at) < new Date()) {
     if (row.status !== 'expired') {
       await env.DB.prepare(
-        "UPDATE nps_survey_requests SET status = 'expired', updated_at = datetime('now') WHERE id = ?"
-      ).bind(row.id).run();
+        "UPDATE nps_survey_requests SET status = 'expired', updated_at = datetime('now') WHERE id = ?",
+      )
+        .bind(row.id)
+        .run();
     }
     return new Response(renderExpiredHtml(), {
       status: 200,
@@ -46,13 +50,15 @@ export async function handleForm(token: string, env: Env): Promise<Response> {
 
   if (row.status === 'sent') {
     await env.DB.prepare(
-      "UPDATE nps_survey_requests SET status = 'opened', opened_at = datetime('now'), updated_at = datetime('now') WHERE id = ?"
-    ).bind(row.id).run();
+      "UPDATE nps_survey_requests SET status = 'opened', opened_at = datetime('now'), updated_at = datetime('now') WHERE id = ?",
+    )
+      .bind(row.id)
+      .run();
   }
 
-  const config = await env.DB.prepare(
-    'SELECT config_json FROM survey_config WHERE id = 1'
-  ).first<{ config_json: string }>();
+  const config = await env.DB.prepare('SELECT config_json FROM survey_config WHERE id = 1').first<{
+    config_json: string;
+  }>();
 
   const configJson = config?.config_json ?? '{}';
 

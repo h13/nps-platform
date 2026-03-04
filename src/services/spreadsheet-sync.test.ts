@@ -76,13 +76,8 @@ describe('parseRowsToObjects', () => {
   });
 
   it('fills missing values with empty string', () => {
-    const values = [
-      ['a', 'b', 'c'],
-      ['1'],
-    ];
-    expect(parseRowsToObjects(values)).toEqual([
-      { a: '1', b: '', c: '' },
-    ]);
+    const values = [['a', 'b', 'c'], ['1']];
+    expect(parseRowsToObjects(values)).toEqual([{ a: '1', b: '', c: '' }]);
   });
 });
 
@@ -103,9 +98,7 @@ describe('parseQuestions', () => {
   };
 
   it('filters out inactive questions', () => {
-    const rows = [
-      { ...baseRow, is_active: 'FALSE' },
-    ];
+    const rows = [{ ...baseRow, is_active: 'FALSE' }];
     expect(parseQuestions(rows)).toEqual([]);
   });
 
@@ -199,15 +192,11 @@ describe('parseOptions', () => {
       { value: 'a', label: 'A' },
       { value: 'b', label: 'B' },
     ]);
-    expect(result.get('q2')).toEqual([
-      { value: 'x', label: 'X' },
-    ]);
+    expect(result.get('q2')).toEqual([{ value: 'x', label: 'X' }]);
   });
 
   it('filters out inactive options', () => {
-    const rows = [
-      { ...baseRow, is_active: 'FALSE' },
-    ];
+    const rows = [{ ...baseRow, is_active: 'FALSE' }];
     expect(parseOptions(rows).size).toBe(0);
   });
 
@@ -280,7 +269,13 @@ describe('buildSurveyConfig', () => {
   ];
 
   const optionRows = [
-    { question_id: 'reason', value: 'quality', label: '品質', is_active: 'TRUE', display_order: '1' },
+    {
+      question_id: 'reason',
+      value: 'quality',
+      label: '品質',
+      is_active: 'TRUE',
+      display_order: '1',
+    },
     { question_id: 'reason', value: 'price', label: '価格', is_active: 'TRUE', display_order: '2' },
   ];
 

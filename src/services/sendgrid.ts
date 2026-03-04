@@ -16,7 +16,7 @@ export async function sendMail(env: Env, params: SendMailParams): Promise<SendMa
   const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${env.SENDGRID_API_KEY}`,
+      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({

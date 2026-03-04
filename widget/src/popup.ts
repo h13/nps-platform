@@ -122,11 +122,16 @@ export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTML
     let valid = true;
 
     for (const q of config.questions) {
-      const errEl = shadow.getElementById('err-' + q.id);
+      const errEl = shadow.getElementById(`err-${q.id}`);
       if (errEl) errEl.classList.remove('visible');
       if (q.required) {
         const val = answers[q.id];
-        if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+        if (
+          val === undefined ||
+          val === null ||
+          val === '' ||
+          (Array.isArray(val) && val.length === 0)
+        ) {
           if (errEl) {
             errEl.textContent = '\u3053\u306e\u9805\u76ee\u306f\u5fc5\u9808\u3067\u3059';
             errEl.classList.add('visible');
@@ -141,7 +146,8 @@ export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTML
     submitBtn.disabled = true;
     submitBtn.textContent = '\u9001\u4fe1\u4e2d...';
 
-    callbacks.onSubmit(answers)
+    callbacks
+      .onSubmit(answers)
       .then(() => {
         overlay.innerHTML = '';
         const thanks = document.createElement('div');
@@ -183,7 +189,7 @@ export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTML
         div.appendChild(buildNpsButtons(q, answers));
         break;
       case 'rating':
-        div.appendChild(buildRatingButtons(q, answers, primary));
+        div.appendChild(buildRatingButtons(q, answers));
         break;
       case 'free_text':
         div.appendChild(buildTextarea(q, answers));
@@ -201,7 +207,7 @@ export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTML
 
     const errMsg = document.createElement('div');
     errMsg.className = 'error-msg';
-    errMsg.id = 'err-' + q.id;
+    errMsg.id = `err-${q.id}`;
     div.appendChild(errMsg);
 
     form.appendChild(div);
@@ -250,7 +256,7 @@ function buildNpsButtons(q: Question, answers: Record<string, unknown>): HTMLEle
   return wrapper;
 }
 
-function buildRatingButtons(q: Question, answers: Record<string, unknown>, primary: string): HTMLElement {
+function buildRatingButtons(q: Question, answers: Record<string, unknown>): HTMLElement {
   const wrapper = document.createElement('div');
   const row = document.createElement('div');
   row.className = 'btn-row';
@@ -279,7 +285,9 @@ function buildTextarea(q: Question, answers: Record<string, unknown>): HTMLEleme
   const ta = document.createElement('textarea');
   if (q.placeholder) ta.placeholder = q.placeholder;
   if (q.max_length) ta.maxLength = q.max_length;
-  ta.addEventListener('input', () => { answers[q.id] = ta.value; });
+  ta.addEventListener('input', () => {
+    answers[q.id] = ta.value;
+  });
   return ta;
 }
 
@@ -295,7 +303,9 @@ function buildSelect(q: Question, answers: Record<string, unknown>): HTMLElement
     opt.textContent = o.label;
     sel.appendChild(opt);
   }
-  sel.addEventListener('change', () => { answers[q.id] = sel.value || undefined; });
+  sel.addEventListener('change', () => {
+    answers[q.id] = sel.value || undefined;
+  });
   return sel;
 }
 
@@ -331,7 +341,9 @@ function buildRadios(q: Question, answers: Record<string, unknown>): HTMLElement
     rb.type = 'radio';
     rb.name = q.id;
     rb.value = o.value;
-    rb.addEventListener('change', () => { answers[q.id] = rb.value; });
+    rb.addEventListener('change', () => {
+      answers[q.id] = rb.value;
+    });
     const span = document.createElement('span');
     span.textContent = o.label;
     lbl.appendChild(rb);

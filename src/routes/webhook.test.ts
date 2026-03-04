@@ -41,12 +41,15 @@ describe('POST /nps/webhook', () => {
       widget_primary_color: '#2563EB',
     });
     await env.DB.prepare(
-      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, ?, datetime('now'))`
-    ).bind(config).run();
+      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, ?, datetime('now'))`,
+    )
+      .bind(config)
+      .run();
 
     // Mock global fetch to intercept SendGrid calls
     vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       if (url.includes('api.sendgrid.com')) {
         return new Response(null, { status: 202 });
       }
@@ -71,14 +74,14 @@ describe('POST /nps/webhook', () => {
   it('returns 400 when required fields are missing', async () => {
     const res = await webhookRequest({ opportunity_id: 'opp-001' });
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toContain('Missing required fields');
   });
 
   it('returns 400 for invalid email format', async () => {
     const res = await webhookRequest({ ...validPayload, contact_email: 'not-an-email' });
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toContain('Invalid contact_email');
   });
 
@@ -97,14 +100,14 @@ describe('POST /nps/webhook', () => {
   it('returns 202 and creates survey request', async () => {
     const res = await webhookRequest(validPayload);
     expect(res.status).toBe(202);
-    const body = await res.json() as { status: string; token: string };
+    const body = (await res.json()) as { status: string; token: string };
     expect(body.status).toBe('accepted');
     expect(body.token).toBeTruthy();
 
     // Verify DB record
-    const row = await env.DB.prepare(
-      'SELECT * FROM nps_survey_requests WHERE token = ?'
-    ).bind(body.token).first();
+    const row = await env.DB.prepare('SELECT * FROM nps_survey_requests WHERE token = ?')
+      .bind(body.token)
+      .first();
     expect(row).not.toBeNull();
   });
 
@@ -114,7 +117,7 @@ describe('POST /nps/webhook', () => {
 
     const res2 = await webhookRequest(validPayload);
     expect(res2.status).toBe(200);
-    const body2 = await res2.json() as { status: string; reason: string };
+    const body2 = (await res2.json()) as { status: string; reason: string };
     expect(body2.status).toBe('skipped');
     expect(body2.reason).toBe('duplicate');
   });
@@ -129,17 +132,18 @@ describe('POST /nps/webhook', () => {
 
   it('sets status to sent when email succeeds', async () => {
     const res = await webhookRequest(validPayload);
-    const body = await res.json() as { token: string };
+    const body = (await res.json()) as { token: string };
 
-    const row = await env.DB.prepare(
-      'SELECT status FROM nps_survey_requests WHERE token = ?'
-    ).bind(body.token).first<{ status: string }>();
+    const row = await env.DB.prepare('SELECT status FROM nps_survey_requests WHERE token = ?')
+      .bind(body.token)
+      .first<{ status: string }>();
     expect(row!.status).toBe('sent');
   });
 
   it('sets status to failed when email fails', async () => {
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       if (url.includes('api.sendgrid.com')) {
         return new Response('Bad Request', { status: 400 });
       }
@@ -148,11 +152,13 @@ describe('POST /nps/webhook', () => {
 
     const res = await webhookRequest(validPayload);
     expect(res.status).toBe(202);
-    const body = await res.json() as { token: string };
+    const body = (await res.json()) as { token: string };
 
     const row = await env.DB.prepare(
-      'SELECT status, error_message FROM nps_survey_requests WHERE token = ?'
-    ).bind(body.token).first<{ status: string; error_message: string }>();
+      'SELECT status, error_message FROM nps_survey_requests WHERE token = ?',
+    )
+      .bind(body.token)
+      .first<{ status: string; error_message: string }>();
     expect(row!.status).toBe('failed');
     expect(row!.error_message).toContain('SendGrid 400');
   });
@@ -181,13 +187,16 @@ describe('retryFailedEmails', () => {
       widget_primary_color: '#2563EB',
     });
     await env.DB.prepare(
-      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, ?, datetime('now'))`
-    ).bind(config).run();
+      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, ?, datetime('now'))`,
+    )
+      .bind(config)
+      .run();
   });
 
   it('retries failed emails and updates status on success', async () => {
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       if (url.includes('api.sendgrid.com')) {
         return new Response(null, { status: 202 });
       }
@@ -198,15 +207,19 @@ describe('retryFailedEmails', () => {
     await env.DB.prepare(
       `INSERT INTO nps_survey_requests
        (token, opportunity_id, account_id, account_name, stage, contact_email, contact_name, status, expires_at, send_attempts)
-       VALUES ('retry-tok', 'opp-r1', 'acc-r1', 'Retry Corp', 'closed_won', 'retry@example.com', 'Retry User', 'failed', ?, 1)`
-    ).bind(expiresAt).run();
+       VALUES ('retry-tok', 'opp-r1', 'acc-r1', 'Retry Corp', 'closed_won', 'retry@example.com', 'Retry User', 'failed', ?, 1)`,
+    )
+      .bind(expiresAt)
+      .run();
 
     const { retryFailedEmails } = await import('./webhook');
     await retryFailedEmails(env);
 
     const row = await env.DB.prepare(
-      'SELECT status, send_attempts FROM nps_survey_requests WHERE token = ?'
-    ).bind('retry-tok').first<{ status: string; send_attempts: number }>();
+      'SELECT status, send_attempts FROM nps_survey_requests WHERE token = ?',
+    )
+      .bind('retry-tok')
+      .first<{ status: string; send_attempts: number }>();
     expect(row!.status).toBe('sent');
     expect(row!.send_attempts).toBe(2);
   });
@@ -219,7 +232,8 @@ describe('retryFailedEmails', () => {
 
   it('increments send_attempts on retry failure', async () => {
     vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+      const url =
+        typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
       if (url.includes('api.sendgrid.com')) {
         return new Response('Error', { status: 500 });
       }
@@ -230,15 +244,19 @@ describe('retryFailedEmails', () => {
     await env.DB.prepare(
       `INSERT INTO nps_survey_requests
        (token, opportunity_id, account_id, account_name, stage, contact_email, contact_name, status, expires_at, send_attempts)
-       VALUES ('fail-tok', 'opp-f1', 'acc-f1', 'Fail Corp', 'closed_won', 'fail@example.com', 'Fail User', 'failed', ?, 1)`
-    ).bind(expiresAt).run();
+       VALUES ('fail-tok', 'opp-f1', 'acc-f1', 'Fail Corp', 'closed_won', 'fail@example.com', 'Fail User', 'failed', ?, 1)`,
+    )
+      .bind(expiresAt)
+      .run();
 
     const { retryFailedEmails } = await import('./webhook');
     await retryFailedEmails(env);
 
     const row = await env.DB.prepare(
-      'SELECT status, send_attempts FROM nps_survey_requests WHERE token = ?'
-    ).bind('fail-tok').first<{ status: string; send_attempts: number }>();
+      'SELECT status, send_attempts FROM nps_survey_requests WHERE token = ?',
+    )
+      .bind('fail-tok')
+      .first<{ status: string; send_attempts: number }>();
     expect(row!.status).toBe('failed');
     expect(row!.send_attempts).toBe(2);
   });

@@ -4,10 +4,7 @@ export interface TriggerConfig {
   operator: 'OR' | 'AND';
 }
 
-export function startTriggerWatch(
-  config: TriggerConfig,
-  onTriggered: () => void
-): () => void {
+export function startTriggerWatch(config: TriggerConfig, onTriggered: () => void): () => void {
   let scrollReached = false;
   let dwellReached = false;
   let fired = false;
@@ -17,9 +14,7 @@ export function startTriggerWatch(
     if (fired) return;
 
     const shouldFire =
-      config.operator === 'OR'
-        ? scrollReached || dwellReached
-        : scrollReached && dwellReached;
+      config.operator === 'OR' ? scrollReached || dwellReached : scrollReached && dwellReached;
 
     if (shouldFire) {
       fired = true;
