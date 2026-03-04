@@ -50,7 +50,7 @@ function setLocalStorage(key: string, value: string): void {
   }
 }
 
-(function init(): void {
+export function init(): void {
   const widgetConfig = window.NpsWidget;
   if (!widgetConfig) return;
 
@@ -142,4 +142,6 @@ function setLocalStorage(key: string, value: string): void {
     .catch((err) => {
       console.error('[NPS Widget]', err);
     });
-})();
+}
+
+init();

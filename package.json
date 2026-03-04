@@ -15,6 +15,7 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:widget": "vitest run --config widget/vitest.config.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
@@ -34,7 +35,8 @@
     "@biomejs/biome": "2.4.5",
     "@cloudflare/vitest-pool-workers": "0.12.18",
     "@cloudflare/workers-types": "4.20260305.0",
-    "@vitest/coverage-istanbul": "3.2.4",
+    "@vitest/coverage-istanbul": "^3.2.4",
+    "jsdom": "^28.1.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4",
     "wrangler": "4.69.0"
