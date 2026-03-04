@@ -150,6 +150,25 @@ describe('POST /nps/response', () => {
     expect(res.status).toBe(409);
   });
 
+  it('returns 500 when config not found', async () => {
+    await env.DB.exec('DELETE FROM survey_config');
+    const res = await responseRequest({ answers: { nps: 5 } });
+    expect(res.status).toBe(500);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('Config not found');
+  });
+
+  it('returns 500 when config JSON is invalid', async () => {
+    await env.DB.exec('DELETE FROM survey_config');
+    await env.DB.prepare(
+      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, 'not-valid-json', datetime('now'))`,
+    ).run();
+    const res = await responseRequest({ answers: { nps: 5 } });
+    expect(res.status).toBe(500);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toBe('Survey configuration is invalid');
+  });
+
   it('stores answers as JSON', async () => {
     const res = await responseRequest({
       answers: { nps: 7, comment: 'OK' },
