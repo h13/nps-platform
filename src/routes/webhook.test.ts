@@ -169,6 +169,16 @@ describe('POST /nps/webhook', () => {
     const res = await webhookRequest(validPayload);
     expect(res.status).toBe(202);
   });
+
+  it('uses default config when survey_config has invalid JSON', async () => {
+    await env.DB.exec('DELETE FROM survey_config');
+    await env.DB.prepare(
+      `INSERT INTO survey_config (id, config_json, updated_at) VALUES (1, 'invalid-json', datetime('now'))`,
+    ).run();
+
+    const res = await webhookRequest(validPayload);
+    expect(res.status).toBe(202);
+  });
 });
 
 describe('retryFailedEmails', () => {
@@ -228,6 +238,33 @@ describe('retryFailedEmails', () => {
     const { retryFailedEmails } = await import('./webhook');
     await retryFailedEmails(env);
     // No error thrown
+  });
+
+  it('handles thrown errors during retry gracefully', async () => {
+    vi.stubGlobal('fetch', async () => {
+      throw new Error('Network error');
+    });
+
+    const expiresAt = new Date(Date.now() + 86400000).toISOString();
+    await env.DB.prepare(
+      `INSERT INTO nps_survey_requests
+       (token, opportunity_id, account_id, account_name, stage, contact_email, contact_name, status, expires_at, send_attempts)
+       VALUES ('err-tok', 'opp-e1', 'acc-e1', 'Error Corp', 'closed_won', 'err@example.com', 'Error User', 'failed', ?, 1)`,
+    )
+      .bind(expiresAt)
+      .run();
+
+    const { retryFailedEmails } = await import('./webhook');
+    // Should not throw despite fetch throwing
+    await retryFailedEmails(env);
+
+    const row = await env.DB.prepare(
+      'SELECT status, send_attempts FROM nps_survey_requests WHERE token = ?',
+    )
+      .bind('err-tok')
+      .first<{ status: string; send_attempts: number }>();
+    // Status unchanged, attempts not incremented (error caught before sendMail result)
+    expect(row!.status).toBe('failed');
   });
 
   it('increments send_attempts on retry failure', async () => {
