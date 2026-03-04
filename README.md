@@ -23,7 +23,7 @@ NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers +
 
 ### 前提条件
 
-- Node.js 22+
+- Node.js 24+（`.node-version` で指定済み）
 - [wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
 - [tfenv](https://github.com/tfutils/tfenv) + [TFLint](https://github.com/terraform-linters/tflint) + [Trivy](https://github.com/aquasecurity/trivy)（インフラ管理時）
 
@@ -85,6 +85,15 @@ SLACK_WEBHOOK_URL=<Slack Incoming Webhook URL>
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Spreadsheet 読み取り用サービスアカウント |
 | `SLACK_WEBHOOK_URL` | エラー通知用 Slack Webhook |
 
+## Lint & Format
+
+```bash
+npm run lint          # Biome lint
+npm run lint:fix      # Biome lint（自動修正）
+npm run format:check  # Biome format チェック
+npm run format        # Biome format（自動修正）
+```
+
 ## テスト
 
 ```bash
@@ -105,8 +114,8 @@ brew install tfenv tflint trivy
 
 cd infra
 tfenv install          # .terraform-version に従い自動インストール
-make hooks             # pre-commit フック（fmt + lint + trivy）
-make check             # CI 相当のローカルチェック
+make hooks             # pre-commit フック（Biome + Terraform fmt/lint/trivy）
+make check             # CI 相当のローカルチェック（fmt + lint + trivy + shellcheck）
 ```
 
 ## デプロイ
