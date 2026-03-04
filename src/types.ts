@@ -93,8 +93,11 @@ export type SurveyStatus =
 export type NpsSegment = 'promoter' | 'passive' | 'detractor';
 export type Channel = 'email' | 'lp';
 
+const NPS_PROMOTER_MIN = 9;
+const NPS_PASSIVE_MIN = 7;
+
 export function calculateSegment(score: number): NpsSegment {
-  if (score >= 9) return 'promoter';
-  if (score >= 7) return 'passive';
+  if (score >= NPS_PROMOTER_MIN) return 'promoter';
+  if (score >= NPS_PASSIVE_MIN) return 'passive';
   return 'detractor';
 }

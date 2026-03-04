@@ -59,7 +59,7 @@ async function createSignedJwt(serviceAccount: ServiceAccountKey): Promise<strin
     scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
     aud: 'https://oauth2.googleapis.com/token',
     iat: now,
-    exp: now + 3600,
+    exp: now + 3600, // 1 hour
   };
 
   const encodedHeader = textToBase64Url(JSON.stringify(header));

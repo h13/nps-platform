@@ -16,7 +16,7 @@ export async function handleConfig(env: Env): Promise<Response> {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, max-age=300',
+      'Cache-Control': 'public, max-age=300', // 5 minutes
       'Access-Control-Allow-Origin': '*',
     },
   });

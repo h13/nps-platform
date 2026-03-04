@@ -95,8 +95,10 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
   }
 
   const token = crypto.randomUUID();
-  const expiryDays = parseInt(env.NPS_SURVEY_EXPIRY_DAYS, 10) || 30;
-  const expiresAt = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000).toISOString();
+  const DEFAULT_EXPIRY_DAYS = 30;
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+  const expiryDays = parseInt(env.NPS_SURVEY_EXPIRY_DAYS, 10) || DEFAULT_EXPIRY_DAYS;
+  const expiresAt = new Date(Date.now() + expiryDays * MS_PER_DAY).toISOString();
 
   await env.DB.prepare(
     `INSERT INTO nps_survey_requests
@@ -162,12 +164,15 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
   });
 }
 
+const MAX_SEND_ATTEMPTS = 3;
+const RETRY_BATCH_SIZE = 50;
+
 export async function retryFailedEmails(env: Env): Promise<void> {
   const rows = await env.DB.prepare(
     `SELECT id, token, contact_email, contact_name, account_name, expires_at
      FROM nps_survey_requests
-     WHERE status = 'failed' AND send_attempts < 3
-     LIMIT 50`,
+     WHERE status = 'failed' AND send_attempts < ${MAX_SEND_ATTEMPTS}
+     LIMIT ${RETRY_BATCH_SIZE}`,
   ).all<{
     id: number;
     token: string;
