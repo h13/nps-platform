@@ -1,6 +1,7 @@
 # NPS Platform
 
 [![CI](https://github.com/h13/nps-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/h13/nps-platform/graph/badge.svg)](https://codecov.io/gh/h13/nps-platform)
 [![Terraform](https://github.com/h13/nps-platform/actions/workflows/terraform.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/terraform.yml)
 [![CodeQL](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql)
 
