@@ -1,0 +1,11 @@
+scan:
+  scanners:
+    - misconfig
+    - secret
+
+misconfiguration:
+  include-deprecated-checks: false
+
+severity:
+  - HIGH
+  - CRITICAL

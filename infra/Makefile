@@ -26,7 +26,7 @@ lint:
 	tflint
 
 security:
-	trivy config .
+	trivy config --config trivy.yaml .
 
 check: fmt lint security
 
