@@ -45,20 +45,20 @@ export default {
 
     try {
       if (method === 'POST' && path === '/nps/webhook') {
-        return handleWebhook(request, env);
+        return await handleWebhook(request, env);
       }
       if (method === 'GET' && path.startsWith('/nps/form/')) {
         const token = path.replace('/nps/form/', '');
-        return handleForm(token, env);
+        return await handleForm(token, env);
       }
       if (method === 'POST' && path === '/nps/response') {
-        return handleResponse(request, env);
+        return await handleResponse(request, env);
       }
       if (method === 'GET' && path === '/nps/config') {
-        return handleConfig(env);
+        return await handleConfig(env);
       }
       if (method === 'POST' && path === '/nps/sync') {
-        return handleSync(request, env);
+        return await handleSync(request, env);
       }
 
       return new Response('Not Found', { status: 404 });

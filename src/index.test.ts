@@ -184,6 +184,22 @@ describe('Worker router', () => {
     });
   });
 
+  it('returns 500 for unexpected errors', async () => {
+    const brokenEnv = {
+      ...env,
+      DB: {
+        prepare: () => {
+          throw new Error('DB crashed');
+        },
+      } as unknown as D1Database,
+    };
+
+    const request = new Request('https://example.com/nps/config', { method: 'GET' });
+    const res = await worker.fetch(request, brokenEnv);
+    expect(res.status).toBe(500);
+    expect(await res.text()).toBe('Internal Server Error');
+  });
+
   describe('scheduled handler', () => {
     it('calls runSpreadsheetSync for hourly cron', async () => {
       const controller = createScheduledController({ cron: '0 * * * *' });
