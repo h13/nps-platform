@@ -129,7 +129,7 @@ function showThanksScreen(
 
 export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTMLElement {
   const host = document.createElement('div');
-  const shadow = host.attachShadow({ mode: 'closed' });
+  const shadow = host.attachShadow({ mode: 'open' });
 
   const style = document.createElement('style');
   style.textContent = STYLE;
