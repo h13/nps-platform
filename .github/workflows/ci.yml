@@ -42,6 +42,9 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run widget tests
+        run: npm run test:widget
+
       - name: Run tests with coverage
         run: npm run test:coverage
 
