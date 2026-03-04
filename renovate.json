@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "timezone": "Asia/Tokyo",
-  "minimumReleaseAge": "3 days",
+  "minimumReleaseAge": "7 days",
   "rangeStrategy": "pin",
   "lockFileMaintenance": {
     "enabled": true,
