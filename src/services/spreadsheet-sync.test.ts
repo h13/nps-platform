@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
+import { env, fetchMock } from 'cloudflare:test';
+import { setupTestDb } from '../test-helpers/setup-db';
 import {
   parseRowsToObjects,
   parseBool,
@@ -7,6 +9,8 @@ import {
   parseOptions,
   parseConfig,
   buildSurveyConfig,
+  syncSpreadsheetToD1,
+  runSpreadsheetSync,
 } from './spreadsheet-sync';
 
 describe('parseBool', () => {
@@ -322,5 +326,243 @@ describe('buildSurveyConfig', () => {
     const config = buildSurveyConfig(questionRows, optionRows, configRows);
     expect(config.questions[0].id).toBe('nps');
     expect(config.questions[1].id).toBe('reason');
+  });
+});
+
+// --- Integration tests for syncSpreadsheetToD1 / runSpreadsheetSync ---
+
+async function generateTestPem(): Promise<string> {
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: 'RSASSA-PKCS1-v1_5',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['sign', 'verify'],
+  );
+  const pkcs8 = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+  const pemBase64 = btoa(String.fromCharCode(...new Uint8Array(pkcs8)));
+  return `-----BEGIN PRIVATE KEY-----\n${pemBase64}\n-----END PRIVATE KEY-----`;
+}
+
+function mockSheetsResponse(questionValues: string[][]): string {
+  return JSON.stringify({
+    spreadsheetId: 'test-sheet',
+    valueRanges: [
+      { range: 'questions!A:L', majorDimension: 'ROWS', values: questionValues },
+      {
+        range: 'options!A:E',
+        majorDimension: 'ROWS',
+        values: [['question_id', 'value', 'label', 'is_active', 'display_order']],
+      },
+      {
+        range: 'config!A:B',
+        majorDimension: 'ROWS',
+        values: [
+          ['key', 'value'],
+          ['survey_title', 'Test Survey'],
+        ],
+      },
+    ],
+  });
+}
+
+function setupFetchMocks(sheetsBody: string): void {
+  fetchMock.activate();
+  fetchMock.disableNetConnect();
+
+  fetchMock
+    .get('https://oauth2.googleapis.com')
+    .intercept({ path: '/token', method: 'POST' })
+    .reply(
+      200,
+      JSON.stringify({
+        access_token: 'test-token',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+
+  fetchMock
+    .get('https://sheets.googleapis.com')
+    .intercept({ path: /\/v4\/spreadsheets\/.*/, method: 'GET' })
+    .reply(200, sheetsBody, { headers: { 'Content-Type': 'application/json' } });
+}
+
+describe('syncSpreadsheetToD1', () => {
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
+  beforeEach(async () => {
+    await env.DB.exec('DELETE FROM survey_config');
+  });
+
+  it('throws when GOOGLE_SERVICE_ACCOUNT_JSON is missing client_email', async () => {
+    const testEnv = { ...env, GOOGLE_SERVICE_ACCOUNT_JSON: '{}', SPREADSHEET_ID: 'x' };
+    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow(
+      'Invalid GOOGLE_SERVICE_ACCOUNT_JSON',
+    );
+  });
+
+  it('throws when SPREADSHEET_ID is empty', async () => {
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        client_email: 'a@b.com',
+        private_key: 'key',
+      }),
+      SPREADSHEET_ID: '',
+    };
+    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('SPREADSHEET_ID is not configured');
+  });
+
+  it('throws when no active questions are found', async () => {
+    const pem = await generateTestPem();
+    const sheetsBody = mockSheetsResponse([
+      ['id', 'type', 'text', 'required', 'is_active', 'display_order', 'placeholder', 'max_length', 'min_value', 'max_value', 'min_label', 'max_label'],
+      ['nps', 'nps_score', 'Score?', 'TRUE', 'FALSE', '1', '', '', '', '', '', ''],
+    ]);
+    setupFetchMocks(sheetsBody);
+
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        client_email: 'test@test.iam.gserviceaccount.com',
+        private_key: pem,
+      }),
+      SPREADSHEET_ID: 'test-id',
+    };
+
+    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow(
+      'no active questions',
+    );
+    fetchMock.deactivate();
+  });
+
+  it('throws when Google token exchange fails', async () => {
+    fetchMock.activate();
+    fetchMock.disableNetConnect();
+
+    fetchMock
+      .get('https://oauth2.googleapis.com')
+      .intercept({ path: '/token', method: 'POST' })
+      .reply(401, 'Unauthorized');
+
+    const pem = await generateTestPem();
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        client_email: 'test@test.iam.gserviceaccount.com',
+        private_key: pem,
+      }),
+      SPREADSHEET_ID: 'test-id',
+    };
+
+    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('Token exchange failed');
+    fetchMock.deactivate();
+  });
+
+  it('throws when Sheets API fails', async () => {
+    fetchMock.activate();
+    fetchMock.disableNetConnect();
+
+    fetchMock
+      .get('https://oauth2.googleapis.com')
+      .intercept({ path: '/token', method: 'POST' })
+      .reply(
+        200,
+        JSON.stringify({ access_token: 't', token_type: 'Bearer', expires_in: 3600 }),
+        { headers: { 'Content-Type': 'application/json' } },
+      );
+
+    fetchMock
+      .get('https://sheets.googleapis.com')
+      .intercept({ path: /\/v4\/spreadsheets\/.*/, method: 'GET' })
+      .reply(403, 'Forbidden');
+
+    const pem = await generateTestPem();
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        client_email: 'test@test.iam.gserviceaccount.com',
+        private_key: pem,
+      }),
+      SPREADSHEET_ID: 'test-id',
+    };
+
+    await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('Sheets API failed');
+    fetchMock.deactivate();
+  });
+
+  it('writes config to D1 on success', async () => {
+    const pem = await generateTestPem();
+    const sheetsBody = mockSheetsResponse([
+      ['id', 'type', 'text', 'required', 'is_active', 'display_order', 'placeholder', 'max_length', 'min_value', 'max_value', 'min_label', 'max_label'],
+      ['nps', 'nps_score', 'Score?', 'TRUE', 'TRUE', '1', '', '', '', '', '', ''],
+    ]);
+    setupFetchMocks(sheetsBody);
+
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({
+        client_email: 'test@test.iam.gserviceaccount.com',
+        private_key: pem,
+      }),
+      SPREADSHEET_ID: 'test-id',
+    };
+
+    await syncSpreadsheetToD1(testEnv);
+
+    const row = await env.DB.prepare('SELECT config_json FROM survey_config WHERE id = 1').first<{
+      config_json: string;
+    }>();
+    expect(row).toBeTruthy();
+    const config = JSON.parse(row!.config_json);
+    expect(config.survey_title).toBe('Test Survey');
+    expect(config.questions).toHaveLength(1);
+    fetchMock.deactivate();
+  });
+});
+
+describe('runSpreadsheetSync', () => {
+  beforeAll(async () => {
+    await setupTestDb();
+  });
+
+  it('catches errors and logs them', async () => {
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+      SPREADSHEET_ID: '',
+      SLACK_WEBHOOK_URL: '',
+    };
+
+    // Should not throw
+    await runSpreadsheetSync(testEnv);
+  });
+
+  it('notifies Slack on error when webhook URL is set', async () => {
+    fetchMock.activate();
+    fetchMock.disableNetConnect();
+
+    // Mock Slack webhook
+    fetchMock
+      .get('https://hooks.slack.com')
+      .intercept({ path: '/test', method: 'POST' })
+      .reply(200, 'ok');
+
+    const testEnv = {
+      ...env,
+      GOOGLE_SERVICE_ACCOUNT_JSON: '{}',
+      SPREADSHEET_ID: '',
+      SLACK_WEBHOOK_URL: 'https://hooks.slack.com/test',
+    };
+
+    await runSpreadsheetSync(testEnv);
+    fetchMock.deactivate();
   });
 });
