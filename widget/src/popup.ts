@@ -77,6 +77,56 @@ select:focus { outline:none; border-color:var(--primary); }
 .thanks p { font-size:1rem; font-weight:600; }
 `;
 
+function validateForm(
+  questions: Question[],
+  answers: Record<string, unknown>,
+  shadow: ShadowRoot,
+): boolean {
+  let valid = true;
+
+  for (const q of questions) {
+    const errEl = shadow.getElementById(`err-${q.id}`);
+    if (errEl) errEl.classList.remove('visible');
+    if (q.required) {
+      const val = answers[q.id];
+      if (
+        val === undefined ||
+        val === null ||
+        val === '' ||
+        (Array.isArray(val) && val.length === 0)
+      ) {
+        if (errEl) {
+          errEl.textContent = '\u3053\u306e\u9805\u76ee\u306f\u5fc5\u9808\u3067\u3059';
+          errEl.classList.add('visible');
+        }
+        valid = false;
+      }
+    }
+  }
+
+  return valid;
+}
+
+function showThanksScreen(
+  overlay: HTMLElement,
+  thanksMessage: string,
+  onClose: () => void,
+): void {
+  overlay.innerHTML = '';
+  const thanks = document.createElement('div');
+  thanks.className = 'thanks';
+  thanks.innerHTML = '<div class="check">\u2713</div>';
+  const msg = document.createElement('p');
+  msg.textContent = thanksMessage;
+  thanks.appendChild(msg);
+  overlay.appendChild(thanks);
+
+  setTimeout(() => {
+    overlay.style.animation = 'fadeOut 0.3s ease forwards';
+    setTimeout(() => onClose(), 300);
+  }, 2000);
+}
+
 export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTMLElement {
   const host = document.createElement('div');
   const shadow = host.attachShadow({ mode: 'closed' });
@@ -119,29 +169,8 @@ export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTML
   const form = document.createElement('form');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    let valid = true;
 
-    for (const q of config.questions) {
-      const errEl = shadow.getElementById(`err-${q.id}`);
-      if (errEl) errEl.classList.remove('visible');
-      if (q.required) {
-        const val = answers[q.id];
-        if (
-          val === undefined ||
-          val === null ||
-          val === '' ||
-          (Array.isArray(val) && val.length === 0)
-        ) {
-          if (errEl) {
-            errEl.textContent = '\u3053\u306e\u9805\u76ee\u306f\u5fc5\u9808\u3067\u3059';
-            errEl.classList.add('visible');
-          }
-          valid = false;
-        }
-      }
-    }
-
-    if (!valid) return;
+    if (!validateForm(config.questions, answers, shadow)) return;
 
     submitBtn.disabled = true;
     submitBtn.textContent = '\u9001\u4fe1\u4e2d...';
@@ -149,19 +178,7 @@ export function showPopup(config: SurveyConfig, callbacks: PopupCallbacks): HTML
     callbacks
       .onSubmit(answers)
       .then(() => {
-        overlay.innerHTML = '';
-        const thanks = document.createElement('div');
-        thanks.className = 'thanks';
-        thanks.innerHTML = '<div class="check">\u2713</div>';
-        const msg = document.createElement('p');
-        msg.textContent = config.thanks_message || '';
-        thanks.appendChild(msg);
-        overlay.appendChild(thanks);
-
-        setTimeout(() => {
-          overlay.style.animation = 'fadeOut 0.3s ease forwards';
-          setTimeout(() => callbacks.onClose(), 300);
-        }, 2000);
+        showThanksScreen(overlay, config.thanks_message || '', () => callbacks.onClose());
       })
       .catch(() => {
         submitBtn.disabled = false;
