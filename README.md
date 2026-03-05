@@ -1,9 +1,9 @@
 # NPS Platform
 
 [![CI](https://github.com/h13/nps-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/ci.yml)
+[![E2E](https://github.com/h13/nps-platform/actions/workflows/e2e.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/e2e.yml)
 [![codecov](https://codecov.io/gh/h13/nps-platform/graph/badge.svg)](https://codecov.io/gh/h13/nps-platform)
 [![Terraform](https://github.com/h13/nps-platform/actions/workflows/terraform.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/terraform.yml)
-[![CodeQL](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql)
 
 NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers + D1 で構築し、Salesforce 連携・メール配信・LP ウィジェットを単一プロジェクトで完結させる。
 
@@ -25,26 +25,31 @@ NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers +
 ### 前提条件
 
 - Node.js 24+（`.node-version` で指定済み）
-- [wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
-- [tfenv](https://github.com/tfutils/tfenv) + [TFLint](https://github.com/terraform-linters/tflint) + [Trivy](https://github.com/aquasecurity/trivy)（インフラ管理時）
+- pnpm 10.30+（`packageManager` フィールドで指定済み、`corepack enable` で自動インストール）
+- [tfenv](https://github.com/tfutils/tfenv) + [TFLint](https://github.com/terraform-linters/tflint) + [Trivy](https://github.com/aquasecurity/trivy)（インフラ管理時のみ）
 
-### インストール & ローカル起動
+### ローカル起動
 
 ```bash
-pnpm install
-pnpm run db:setup   # D1 スキーマ作成 + シードデータ投入
-pnpm run dev         # http://localhost:8787
+git clone git@github.com:h13/nps-platform.git
+cd nps-platform
+pnpm install          # 依存インストール + husky の Git hooks セットアップ
+pnpm run db:setup     # D1 スキーマ作成 + シードデータ投入
 ```
 
-### .dev.vars（ローカル開発用シークレット）
-
-プロジェクトルートに `.dev.vars` を作成し、以下のキーを設定する：
+`.dev.vars` をプロジェクトルートに作成（`.gitignore` 済み）：
 
 ```
-NPS_API_KEY=<任意の API キー>
-SENDGRID_API_KEY=<SendGrid API キー>
-GOOGLE_SERVICE_ACCOUNT_JSON=<サービスアカウント JSON>
-SLACK_WEBHOOK_URL=<Slack Incoming Webhook URL>
+NPS_API_KEY=local-dev-api-key
+SENDGRID_API_KEY=SG.test-key
+GOOGLE_SERVICE_ACCOUNT_JSON={}
+SLACK_WEBHOOK_URL=https://hooks.slack.com/test
+```
+
+起動：
+
+```bash
+pnpm run dev           # http://localhost:8787
 ```
 
 ## API エンドポイント
@@ -86,24 +91,45 @@ SLACK_WEBHOOK_URL=<Slack Incoming Webhook URL>
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Spreadsheet 読み取り用サービスアカウント |
 | `SLACK_WEBHOOK_URL` | エラー通知用 Slack Webhook |
 
-## Lint & Format
+## 開発コマンド
+
+### Lint / Format / 型チェック
 
 ```bash
-pnpm run lint          # Biome lint
-pnpm run lint:fix      # Biome lint（自動修正）
-pnpm run format:check  # Biome format チェック
-pnpm run format        # Biome format（自動修正）
+pnpm exec biome check .       # lint + format を一括チェック
+pnpm exec biome check --write . # 自動修正
+pnpm run typecheck             # tsc (src + widget + e2e)
+pnpm run knip                  # 未使用コード検出
 ```
 
-## テスト
+### テスト
 
 ```bash
-pnpm test              # テスト実行
+pnpm test              # Workers 単体テスト (Vitest + Cloudflare pool)
+pnpm run test:widget   # Widget 単体テスト (Vitest + jsdom)
 pnpm run test:watch    # ウォッチモード
 pnpm run test:coverage # カバレッジレポート付き
+pnpm run test:e2e      # E2E テスト (Playwright + wrangler dev)
 ```
 
-カバレッジしきい値: statements 75% / branches 75% / functions 65% / lines 70%
+カバレッジしきい値: statements / branches / functions / lines すべて 80%
+
+### コミット規約
+
+[Conventional Commits](https://www.conventionalcommits.org/) を採用。husky + commitlint で強制。
+
+```
+feat: 新機能
+fix: バグ修正
+refactor: リファクタリング
+docs: ドキュメント
+test: テスト
+chore: 雑務
+perf: パフォーマンス改善
+ci: CI/CD
+```
+
+pre-commit フック（lint-staged）で `biome check --write` が自動実行される。
 
 ## インフラ管理
 
@@ -161,37 +187,47 @@ LP に以下のスクリプトタグを追加する：
 ></script>
 ```
 
+## CI
+
+| ワークフロー | トリガー | 内容 |
+|-------------|---------|------|
+| **CI** (`ci.yml`) | push / PR to main | commitlint, biome check, knip, typecheck, tests, coverage, bundle size, audit, actionlint |
+| **E2E** (`e2e.yml`) | push / PR to main | Playwright E2E テスト, Lighthouse CI |
+| **Terraform** (`terraform.yml`) | infra/** 変更時 | fmt, tflint, trivy, shellcheck |
+| **CodeQL** | GitHub Default Setup | javascript-typescript セキュリティ分析 |
+
+Branch protection: `check` + `e2e` が必須。force push 禁止。PR 経由でのマージが必要。
+
 ## プロジェクト構成
 
 ```
-├── src/
-│   ├── index.ts              # ルーティング / Cron ハンドラ
-│   ├── types.ts              # 型定義 (Env, etc.)
-│   ├── middleware/
-│   │   └── auth.ts           # Bearer Token 認証
-│   ├── routes/
-│   │   ├── webhook.ts        # POST /nps/webhook + リトライ
-│   │   ├── form.ts           # GET /nps/form/:token
-│   │   ├── response.ts       # POST /nps/response
-│   │   └── config.ts         # GET /nps/config
-│   ├── services/
-│   │   ├── sendgrid.ts       # SendGrid メール送信
-│   │   └── spreadsheet-sync.ts # Spreadsheet → D1 同期
-│   └── templates/            # HTML テンプレート
-├── widget/
-│   ├── src/                  # Widget ソース
-│   └── dist/                 # ビルド済み Static Assets
+├── src/                       # Workers ソース
+│   ├── index.ts               # ルーティング / Cron ハンドラ
+│   ├── types.ts               # 型定義 (Env, etc.)
+│   ├── middleware/auth.ts     # Bearer Token 認証
+│   ├── routes/                # API ルートハンドラ
+│   ├── services/              # SendGrid, Spreadsheet 同期
+│   └── templates/             # HTML テンプレート
+├── widget/                    # LP Widget (Shadow DOM)
+│   ├── src/                   # Widget ソース
+│   ├── dist/                  # ビルド済み Static Assets
+│   ├── tsconfig.json          # DOM 型用
+│   └── vitest.config.ts       # Widget テスト設定
+├── e2e/                       # Playwright E2E テスト
+│   └── tsconfig.json          # Playwright 型用
 ├── sql/
-│   ├── schema.sql            # D1 スキーマ
-│   └── seed.sql              # シードデータ
-├── infra/
-│   ├── *.tf                  # Terraform リソース定義
-│   ├── Makefile              # init / plan / apply / check / hooks
-│   ├── .terraform-version    # tfenv 用バージョン指定
-│   └── scripts/              # secrets 登録 / Spreadsheet 共有 / pre-commit
-├── wrangler.toml             # Workers 設定
-├── vitest.config.ts          # テスト設定
-└── SPEC.md                   # 詳細実装仕様書
+│   ├── schema.sql             # D1 スキーマ
+│   ├── seed.sql               # シードデータ
+│   └── seed-e2e.sql           # E2E/Lighthouse テスト用データ
+├── infra/                     # Terraform (GCP + Cloudflare)
+├── .github/
+│   ├── workflows/             # CI, E2E, Terraform
+│   ├── CODEOWNERS
+│   └── pull_request_template.md
+├── wrangler.toml              # Workers 設定
+├── biome.json                 # Linter / Formatter 設定
+├── tsconfig.json              # Workers 型用
+└── SPEC.md                    # 詳細実装仕様書
 ```
 
 ## 詳細仕様
