@@ -113,7 +113,7 @@ export async function handleWebhook(request: Request, env: Env): Promise<Respons
       stage,
       contact_email,
       contact_name,
-      body.amount ?? null,
+      body.amount != null ? Math.round(body.amount) : null,
       body.close_date ?? null,
       body.owner_name ?? null,
       expiresAt,

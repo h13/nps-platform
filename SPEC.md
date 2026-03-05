@@ -320,7 +320,7 @@ SPREADSHEET_ID = "<Staging 用 Spreadsheet ID>"
 -- 設問・選択肢・設定のキャッシュ（Spreadsheet から同期）
 CREATE TABLE IF NOT EXISTS survey_config (
     id          INTEGER PRIMARY KEY CHECK (id = 1),  -- 常に1行
-    config_json TEXT    NOT NULL,                     -- GET /nps/config のレスポンスそのもの
+    config_json TEXT    NOT NULL CHECK (json_valid(config_json)),  -- GET /nps/config のレスポンスそのもの
     synced_at   TEXT    NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
@@ -336,7 +336,7 @@ CREATE TABLE IF NOT EXISTS nps_survey_requests (
     stage           TEXT    NOT NULL,
     contact_email   TEXT    NOT NULL,
     contact_name    TEXT    NOT NULL,
-    amount          REAL,
+    amount          INTEGER,
     close_date      TEXT,
     owner_name      TEXT,
     -- ステータス
@@ -347,7 +347,7 @@ CREATE TABLE IF NOT EXISTS nps_survey_requests (
     responded_at    TEXT,
     expires_at      TEXT    NOT NULL,
     error_message   TEXT,
-    send_attempts   INTEGER NOT NULL DEFAULT 0,
+    send_attempts   INTEGER NOT NULL DEFAULT 0 CHECK (send_attempts BETWEEN 0 AND 10),
     -- タイムスタンプ
     created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
@@ -367,11 +367,11 @@ CREATE TABLE IF NOT EXISTS nps_responses (
     nps_score         INTEGER CHECK (nps_score IS NULL OR nps_score BETWEEN 0 AND 10),
     segment           TEXT    CHECK (segment IS NULL OR segment IN ('promoter', 'passive', 'detractor')),
     -- 全設問の回答（JSON）
-    answers           TEXT    NOT NULL,
+    answers           TEXT    NOT NULL CHECK (json_valid(answers)),
     -- LP メタデータ（channel = 'lp' の場合のみ）
     page_url          TEXT,
-    scroll_percent    INTEGER,
-    dwell_seconds     INTEGER,
+    scroll_percent    INTEGER CHECK (scroll_percent IS NULL OR scroll_percent BETWEEN 0 AND 100),
+    dwell_seconds     INTEGER CHECK (dwell_seconds IS NULL OR dwell_seconds >= 0),
     user_agent        TEXT,
     -- SF コンテキスト（channel = 'email' の場合、survey_request から引き継ぎ）
     stage             TEXT,
