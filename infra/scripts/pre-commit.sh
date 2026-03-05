@@ -12,24 +12,24 @@ if [ -n "${staged_ts}" ]; then
   echo "=== Biome pre-commit checks ==="
   cd "${root}"
 
-  if command -v npx > /dev/null 2>&1; then
+  if command -v pnpm > /dev/null 2>&1; then
     echo "[1/2] biome lint..."
-    if ! npx biome lint . > /dev/null 2>&1; then
-      echo "  FAIL: Run 'npm run lint:fix' to fix"
+    if ! pnpm exec biome lint . > /dev/null 2>&1; then
+      echo "  FAIL: Run 'pnpm run lint:fix' to fix"
       errors=$((errors + 1))
     else
       echo "  OK"
     fi
 
     echo "[2/2] biome format..."
-    if ! npx biome format . > /dev/null 2>&1; then
-      echo "  FAIL: Run 'npm run format' to fix"
+    if ! pnpm exec biome format . > /dev/null 2>&1; then
+      echo "  FAIL: Run 'pnpm run format' to fix"
       errors=$((errors + 1))
     else
       echo "  OK"
     fi
   else
-    echo "[biome] SKIP (npx not available)"
+    echo "[biome] SKIP (pnpm not available)"
   fi
 fi
 

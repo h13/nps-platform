@@ -950,7 +950,7 @@ Static Assets が自動配信。`widget/dist/nps/widget.js` → `https://nps.exa
 ### ビルド
 
 ```bash
-npx esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfile=widget/dist/nps/widget.js
+pnpm exec esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfile=widget/dist/nps/widget.js
 ```
 
 ---
@@ -1027,7 +1027,7 @@ npx esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfile=wid
 
 ### Phase 1: プロジェクト初期化 + DB + Config
 
-1. `npm create cloudflare@latest nps-platform`（TypeScript テンプレート）
+1. `pnpm create cloudflare@latest nps-platform`（TypeScript テンプレート）
 2. `wrangler.toml` 設定（staging 環境含む）
 3. `.dev.vars` 作成（ローカル用シークレット）
 4. `.gitignore` 設定
@@ -1129,14 +1129,14 @@ git clone git@github.com:<org>/nps-platform.git
 cd nps-platform
 
 # 2. 依存インストール
-npm install
+pnpm install
 
 # 3. ローカル D1 にスキーマ・シードデータ適用
 wrangler d1 execute nps-platform --local --file=./sql/schema.sql
 wrangler d1 execute nps-platform --local --file=./sql/seed.sql
 
 # 4. Widget ビルド
-npx esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfile=widget/dist/nps/widget.js
+pnpm exec esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfile=widget/dist/nps/widget.js
 
 # 5. ローカル起動
 wrangler dev
@@ -1286,7 +1286,7 @@ git checkout -b feature/add-rating-question
 wrangler dev
 
 # 3. テスト実行
-npm test
+pnpm test
 
 # 4. Staging にデプロイして確認
 wrangler deploy --env staging

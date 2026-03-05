@@ -31,9 +31,9 @@ NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers +
 ### インストール & ローカル起動
 
 ```bash
-npm install
-npm run db:setup   # D1 スキーマ作成 + シードデータ投入
-npm run dev         # http://localhost:8787
+pnpm install
+pnpm run db:setup   # D1 スキーマ作成 + シードデータ投入
+pnpm run dev         # http://localhost:8787
 ```
 
 ### .dev.vars（ローカル開発用シークレット）
@@ -89,18 +89,18 @@ SLACK_WEBHOOK_URL=<Slack Incoming Webhook URL>
 ## Lint & Format
 
 ```bash
-npm run lint          # Biome lint
-npm run lint:fix      # Biome lint（自動修正）
-npm run format:check  # Biome format チェック
-npm run format        # Biome format（自動修正）
+pnpm run lint          # Biome lint
+pnpm run lint:fix      # Biome lint（自動修正）
+pnpm run format:check  # Biome format チェック
+pnpm run format        # Biome format（自動修正）
 ```
 
 ## テスト
 
 ```bash
-npm test              # テスト実行
-npm run test:watch    # ウォッチモード
-npm run test:coverage # カバレッジレポート付き
+pnpm test              # テスト実行
+pnpm run test:watch    # ウォッチモード
+pnpm run test:coverage # カバレッジレポート付き
 ```
 
 カバレッジしきい値: statements 75% / branches 75% / functions 65% / lines 70%
@@ -144,8 +144,8 @@ wrangler secret put SLACK_WEBHOOK_URL --env staging
 ### デプロイ実行
 
 ```bash
-npm run deploy            # Production
-npm run deploy:staging    # Staging
+pnpm run deploy            # Production
+pnpm run deploy:staging    # Staging
 ```
 
 ## Widget 埋め込み

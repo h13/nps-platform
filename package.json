@@ -8,7 +8,7 @@
     "deploy:staging": "wrangler deploy --env staging",
     "db:schema": "wrangler d1 execute nps-platform --local --file=./sql/schema.sql",
     "db:seed": "wrangler d1 execute nps-platform --local --file=./sql/seed.sql",
-    "db:setup": "npm run db:schema && npm run db:seed",
+    "db:setup": "pnpm run db:schema && pnpm run db:seed",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "format:check": "biome format .",
@@ -27,6 +27,7 @@
   "author": "",
   "license": "ISC",
   "private": true,
+  "packageManager": "pnpm@10.30.3",
   "bugs": {
     "url": "https://github.com/h13/nps-platform/issues"
   },
