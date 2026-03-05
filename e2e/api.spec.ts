@@ -19,7 +19,7 @@ test.describe('API smoke tests', () => {
     const res = await request.get('/nps/config');
     expect(res.ok()).toBeTruthy();
     const body = await res.json();
-    expect(body).toHaveProperty('config');
+    expect(body).toHaveProperty('survey_title');
   });
 
   test('GET /unknown returns 404', async ({ request }) => {
