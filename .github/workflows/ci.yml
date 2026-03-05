@@ -45,7 +45,7 @@ jobs:
         run: pnpm run knip
 
       - name: TypeScript type check
-        run: pnpm exec tsc --noEmit
+        run: pnpm run typecheck
 
       - name: Run tests
         run: pnpm test

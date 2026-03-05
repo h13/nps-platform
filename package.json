@@ -13,7 +13,7 @@
     "lint:fix": "biome lint --write .",
     "format:check": "biome format .",
     "format": "biome format --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p widget/tsconfig.json && tsc --noEmit -p e2e/tsconfig.json",
     "test": "vitest run",
     "test:widget": "vitest run --config widget/vitest.config.ts",
     "test:watch": "vitest",
