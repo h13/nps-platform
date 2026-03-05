@@ -19,6 +19,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "knip": "knip",
+    "test:e2e": "playwright test",
     "prepare": "husky"
   },
   "repository": {
@@ -45,6 +46,7 @@
     "@cloudflare/workers-types": "4.20260305.0",
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
+    "@playwright/test": "^1.58.2",
     "@vitest/coverage-istanbul": "^3.2.4",
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",

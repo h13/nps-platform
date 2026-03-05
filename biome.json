@@ -42,7 +42,7 @@
     }
   },
   "files": {
-    "includes": ["src/**/*.ts", "widget/src/**/*.ts"]
+    "includes": ["src/**/*.ts", "widget/src/**/*.ts", "e2e/**/*.ts"]
   },
   "overrides": [
     {

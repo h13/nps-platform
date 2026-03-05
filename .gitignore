@@ -5,6 +5,8 @@ dist/
 !widget/dist/
 *.log
 coverage/
+playwright-report/
+test-results/
 
 # Terraform
 infra/.terraform/
