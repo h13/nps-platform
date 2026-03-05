@@ -34,12 +34,16 @@
   },
   "homepage": "https://github.com/h13/nps-platform#readme",
   "lint-staged": {
-    "*.ts": ["biome check --write"]
+    "*.ts": [
+      "biome check --write"
+    ]
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
     "@cloudflare/vitest-pool-workers": "0.12.18",
     "@cloudflare/workers-types": "4.20260305.0",
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
     "@vitest/coverage-istanbul": "^3.2.4",
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
