@@ -4,6 +4,7 @@
 [![E2E](https://github.com/h13/nps-platform/actions/workflows/e2e.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/e2e.yml)
 [![codecov](https://codecov.io/gh/h13/nps-platform/graph/badge.svg)](https://codecov.io/gh/h13/nps-platform)
 [![Terraform](https://github.com/h13/nps-platform/actions/workflows/terraform.yml/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/terraform.yml)
+[![CodeQL](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql/badge.svg)](https://github.com/h13/nps-platform/actions/workflows/dynamic/github-code-scanning/codeql)
 
 NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers + D1 で構築し、Salesforce 連携・メール配信・LP ウィジェットを単一プロジェクトで完結させる。
 
