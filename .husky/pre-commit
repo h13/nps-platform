@@ -1,0 +1,38 @@
+pnpm exec lint-staged
+
+# Terraform checks (if .tf files staged)
+staged_infra=$(git diff --cached --name-only --diff-filter=ACMR -- 'infra/*.tf' 'infra/*.tfvars' 2>/dev/null || true)
+if [ -n "${staged_infra}" ]; then
+  echo "=== Terraform pre-commit checks ==="
+  root="$(git rev-parse --show-toplevel)"
+  cd "${root}/infra"
+
+  echo "[1/3] terraform fmt..."
+  if ! terraform fmt -check -recursive > /dev/null 2>&1; then
+    echo "  FAIL: Run 'terraform fmt -recursive' in infra/ to fix"
+    exit 1
+  fi
+  echo "  OK"
+
+  if command -v tflint > /dev/null 2>&1; then
+    echo "[2/3] tflint..."
+    if ! tflint --init > /dev/null 2>&1 || ! tflint 2>&1; then
+      echo "  FAIL: Fix tflint issues above"
+      exit 1
+    fi
+    echo "  OK"
+  else
+    echo "[2/3] tflint... SKIP (not installed)"
+  fi
+
+  if command -v trivy > /dev/null 2>&1; then
+    echo "[3/3] trivy config..."
+    if ! trivy config --exit-code 1 --severity HIGH,CRITICAL . > /dev/null 2>&1; then
+      echo "  FAIL: Fix trivy findings"
+      exit 1
+    fi
+    echo "  OK"
+  else
+    echo "[3/3] trivy... SKIP (not installed)"
+  fi
+fi
