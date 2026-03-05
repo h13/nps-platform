@@ -1,6 +1,6 @@
-import { startTriggerWatch } from './trigger';
-import { showPopup } from './popup';
 import type { SurveyConfig } from './popup';
+import { showPopup } from './popup';
+import { startTriggerWatch } from './trigger';
 
 interface NpsWidgetConfig {
   endpoint: string;

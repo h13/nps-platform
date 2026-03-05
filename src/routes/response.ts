@@ -1,4 +1,4 @@
-import type { Env, NpsResponsePayload, SurveyConfig, Question } from '../types';
+import type { Env, NpsResponsePayload, Question, SurveyConfig } from '../types';
 import { calculateSegment } from '../types';
 
 function corsHeaders(): Record<string, string> {

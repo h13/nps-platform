@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { validateAnswers } from './response';
+import { describe, expect, it } from 'vitest';
 import type { Question } from '../types';
+import { validateAnswers } from './response';
 
 function makeQuestion(
   overrides: Partial<Question> & { id: string; type: Question['type'] },

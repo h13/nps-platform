@@ -29,11 +29,8 @@ jobs:
         if: github.event_name == 'pull_request'
         run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-      - name: Biome lint
-        run: pnpm exec biome lint .
-
-      - name: Biome format
-        run: pnpm exec biome format .
+      - name: Biome check
+        run: pnpm exec biome check .
 
       - name: Create .dev.vars for tests
         run: |

@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { env, fetchMock } from 'cloudflare:test';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setupTestDb } from '../test-helpers/setup-db';
 import {
-  parseRowsToObjects,
-  parseBool,
-  parseOptionalInt,
-  parseQuestions,
-  parseOptions,
-  parseConfig,
   buildSurveyConfig,
-  syncSpreadsheetToD1,
+  parseBool,
+  parseConfig,
+  parseOptionalInt,
+  parseOptions,
+  parseQuestions,
+  parseRowsToObjects,
   runSpreadsheetSync,
+  syncSpreadsheetToD1,
 } from './spreadsheet-sync';
 
 describe('parseBool', () => {

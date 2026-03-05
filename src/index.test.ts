@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import {
-  env,
-  SELF,
-  fetchMock,
-  createScheduledController,
   createExecutionContext,
+  createScheduledController,
+  env,
+  fetchMock,
+  SELF,
   waitOnExecutionContext,
 } from 'cloudflare:test';
-import { setupTestDb } from './test-helpers/setup-db';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import worker from './index';
+import { setupTestDb } from './test-helpers/setup-db';
 
 describe('Worker router', () => {
   beforeAll(async () => {

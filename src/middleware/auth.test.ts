@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { verifyBearerToken } from './auth';
+import { describe, expect, it } from 'vitest';
 import type { Env } from '../types';
+import { verifyBearerToken } from './auth';
 
 function makeEnv(apiKey = 'test-api-key'): Env {
   return { NPS_API_KEY: apiKey } as Env;

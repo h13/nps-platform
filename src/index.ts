@@ -1,9 +1,9 @@
-import { handleWebhook, retryFailedEmails } from './routes/webhook';
+import { verifyBearerToken } from './middleware/auth';
+import { handleConfig } from './routes/config';
 import { handleForm } from './routes/form';
 import { handleResponse } from './routes/response';
-import { handleConfig } from './routes/config';
-import { syncSpreadsheetToD1, runSpreadsheetSync } from './services/spreadsheet-sync';
-import { verifyBearerToken } from './middleware/auth';
+import { handleWebhook, retryFailedEmails } from './routes/webhook';
+import { runSpreadsheetSync, syncSpreadsheetToD1 } from './services/spreadsheet-sync';
 import type { Env } from './types';
 
 async function handleSync(request: Request, env: Env): Promise<Response> {

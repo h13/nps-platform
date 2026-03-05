@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest';
 import { env, SELF } from 'cloudflare:test';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setupTestDb } from '../test-helpers/setup-db';
 
 const API_KEY = env.NPS_API_KEY;

@@ -1,7 +1,7 @@
 import { verifyBearerToken } from '../middleware/auth';
 import { sendMail } from '../services/sendgrid';
-import { renderEmailSubject, renderEmailHtml } from '../templates/email';
-import type { Env, WebhookPayload, SurveyConfig } from '../types';
+import { renderEmailHtml, renderEmailSubject } from '../templates/email';
+import type { Env, SurveyConfig, WebhookPayload } from '../types';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 

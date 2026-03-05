@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PopupCallbacks, SurveyConfig } from './popup';
 import { showPopup } from './popup';
-import type { SurveyConfig, PopupCallbacks } from './popup';
 
 function makeConfig(overrides: Partial<SurveyConfig> = {}): SurveyConfig {
   return {
