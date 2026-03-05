@@ -44,6 +44,9 @@ jobs:
           SLACK_WEBHOOK_URL=https://hooks.slack.com/test
           EOF
 
+      - name: Dead code detection
+        run: pnpm run knip
+
       - name: TypeScript type check
         run: pnpm exec tsc --noEmit
 

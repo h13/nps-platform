@@ -21,9 +21,3 @@ export async function setupTestDb() {
     await env.DB.prepare(stmt).run();
   }
 }
-
-export async function cleanTestDb() {
-  await env.DB.prepare('DELETE FROM nps_responses').run();
-  await env.DB.prepare('DELETE FROM nps_survey_requests').run();
-  await env.DB.prepare('DELETE FROM survey_config').run();
-}

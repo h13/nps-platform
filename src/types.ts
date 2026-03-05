@@ -82,16 +82,7 @@ export interface NpsResponsePayload {
   user_agent?: string;
 }
 
-export type SurveyStatus =
-  | 'queued'
-  | 'sending'
-  | 'sent'
-  | 'opened'
-  | 'responded'
-  | 'expired'
-  | 'failed';
 export type NpsSegment = 'promoter' | 'passive' | 'detractor';
-export type Channel = 'email' | 'lp';
 
 const NPS_PROMOTER_MIN = 9;
 const NPS_PASSIVE_MIN = 7;
