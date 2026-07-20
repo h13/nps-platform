@@ -20,20 +20,20 @@ resource "cloudflare_d1_database" "staging" {
 # to skip these on first run.
 # ---------------------------------------------------------
 
-resource "cloudflare_worker_cron_trigger" "production" {
+resource "cloudflare_workers_cron_trigger" "production" {
   account_id  = var.cloudflare_account_id
   script_name = var.workers_script_name
   schedules = [
-    "0 * * * *",  # Spreadsheet → D1 config sync (hourly)
-    "0 18 * * *", # Failed email retry (daily 03:00 JST)
+    { cron = "0 * * * *" },  # Spreadsheet → D1 config sync (hourly)
+    { cron = "0 18 * * *" }, # Failed email retry (daily 03:00 JST)
   ]
 }
 
-resource "cloudflare_worker_cron_trigger" "staging" {
+resource "cloudflare_workers_cron_trigger" "staging" {
   account_id  = var.cloudflare_account_id
   script_name = var.workers_staging_script_name
   schedules = [
-    "0 * * * *",
-    "0 18 * * *",
+    { cron = "0 * * * *" },
+    { cron = "0 18 * * *" },
   ]
 }
