@@ -49,7 +49,7 @@ jobs:
           output: trivy-results.sarif
           exit-code: 1
           trivy-config: infra/trivy.yaml
-          version: 'v0.69.2'
+          version: 'v0.72.0'
 
       - name: Upload Trivy SARIF
         uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
