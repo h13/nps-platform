@@ -5,5 +5,5 @@
   "trailingComma": "all",
   "printWidth": 100,
   "tabWidth": 2,
-  "ignorePatterns": ["pnpm-lock.yaml"]
+  "ignorePatterns": ["pnpm-lock.yaml", "node_modules", "dist", "build", ".wrangler", "widget/dist"]
 }
