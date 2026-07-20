@@ -1,7 +1,19 @@
 {
   "name": "nps-platform",
   "version": "1.0.0",
+  "private": true,
   "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/h13/nps-platform#readme",
+  "bugs": {
+    "url": "https://github.com/h13/nps-platform/issues"
+  },
+  "license": "ISC",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/h13/nps-platform.git"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
@@ -9,10 +21,10 @@
     "db:schema": "wrangler d1 execute nps-platform --local --file=./sql/schema.sql",
     "db:seed": "wrangler d1 execute nps-platform --local --file=./sql/seed.sql",
     "db:setup": "pnpm run db:schema && pnpm run db:seed",
-    "lint": "biome lint .",
-    "lint:fix": "biome lint --write .",
-    "format:check": "biome format .",
-    "format": "biome format --write .",
+    "lint": "oxlint --fix src widget/src e2e",
+    "lint:fix": "oxlint --fix src widget/src e2e",
+    "format:check": "oxfmt --check .",
+    "format": "oxfmt --write .",
     "typecheck": "tsc --noEmit && tsc --noEmit -p widget/tsconfig.json && tsc --noEmit -p e2e/tsconfig.json",
     "test": "vitest run",
     "test:widget": "vitest run --config widget/vitest.config.ts",
@@ -22,26 +34,7 @@
     "test:e2e": "playwright test",
     "prepare": "husky"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/h13/nps-platform.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "private": true,
-  "packageManager": "pnpm@11.15.1",
-  "bugs": {
-    "url": "https://github.com/h13/nps-platform/issues"
-  },
-  "homepage": "https://github.com/h13/nps-platform#readme",
-  "lint-staged": {
-    "*.ts": [
-      "biome check --write"
-    ]
-  },
   "devDependencies": {
-    "@biomejs/biome": "2.5.4",
     "@cloudflare/vitest-pool-workers": "0.12.21",
     "@cloudflare/workers-types": "5.20260719.1",
     "@commitlint/cli": "^21.2.1",
@@ -52,8 +45,17 @@
     "jsdom": "^29.1.1",
     "knip": "^6.27.0",
     "lint-staged": "^17.1.0",
+    "oxfmt": "^0.59.0",
+    "oxlint": "^1.74.0",
     "typescript": "7.0.2",
     "vitest": "3.2.7",
     "wrangler": "4.112.0"
-  }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "oxlint --fix",
+      "oxfmt --write"
+    ]
+  },
+  "packageManager": "pnpm@11.15.1"
 }

@@ -2,13 +2,13 @@
 
 ## Settings
 
-| Setting | Value |
-|---------|-------|
-| Required status checks | CI / check, E2E / e2e |
-| Require branches up to date | Yes |
-| Required reviewers | 0 |
-| Force push | Disabled |
-| Deletion | Disabled |
+| Setting                     | Value                 |
+| --------------------------- | --------------------- |
+| Required status checks      | CI / check, E2E / e2e |
+| Require branches up to date | Yes                   |
+| Required reviewers          | 0                     |
+| Force push                  | Disabled              |
+| Deletion                    | Disabled              |
 
 ## Applied via
 

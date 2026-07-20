@@ -4,16 +4,16 @@ NPS Platform のインフラをコードで管理する。
 
 ## 管理対象
 
-| リソース | Provider | Terraform 管理 |
-|---------|----------|---------------|
-| GCP API 有効化 (Sheets, IAM) | `hashicorp/google` | Yes |
-| Service Account (Sheets Reader) | `hashicorp/google` | Yes |
-| SA Key 生成 | `hashicorp/google` | Yes |
-| D1 Database (prod + staging) | `cloudflare/cloudflare` | Yes |
-| Cron Trigger (prod + staging) | `cloudflare/cloudflare` | Yes |
-| Workers Script デプロイ | — | No（`wrangler deploy`） |
-| Workers Secrets | — | No（`wrangler secret put`） |
-| Google Spreadsheet 作成 | — | No（手動） |
+| リソース                        | Provider                | Terraform 管理              |
+| ------------------------------- | ----------------------- | --------------------------- |
+| GCP API 有効化 (Sheets, IAM)    | `hashicorp/google`      | Yes                         |
+| Service Account (Sheets Reader) | `hashicorp/google`      | Yes                         |
+| SA Key 生成                     | `hashicorp/google`      | Yes                         |
+| D1 Database (prod + staging)    | `cloudflare/cloudflare` | Yes                         |
+| Cron Trigger (prod + staging)   | `cloudflare/cloudflare` | Yes                         |
+| Workers Script デプロイ         | —                       | No（`wrangler deploy`）     |
+| Workers Secrets                 | —                       | No（`wrangler secret put`） |
+| Google Spreadsheet 作成         | —                       | No（手動）                  |
 
 ## 前提条件
 
@@ -58,19 +58,19 @@ make init
 
 ### Makefile ターゲット
 
-| コマンド | 内容 |
-|---------|------|
-| `make init` | `terraform init` |
-| `make plan` | `terraform plan` |
-| `make apply` | `terraform apply` |
-| `make output` | `terraform output` |
-| `make secrets` | SA key を Workers secrets に登録 |
-| `make fmt` | フォーマットチェック |
+| コマンド        | 内容                                    |
+| --------------- | --------------------------------------- |
+| `make init`     | `terraform init`                        |
+| `make plan`     | `terraform plan`                        |
+| `make apply`    | `terraform apply`                       |
+| `make output`   | `terraform output`                      |
+| `make secrets`  | SA key を Workers secrets に登録        |
+| `make fmt`      | フォーマットチェック                    |
 | `make validate` | 構文 + プロバイダスキーマ検証（要認証） |
-| `make lint` | TFLint（google plugin） |
-| `make security` | Trivy config scan |
-| `make check` | fmt + lint + security を一括実行 |
-| `make hooks` | pre-commit フックをインストール |
+| `make lint`     | TFLint（google plugin）                 |
+| `make security` | Trivy config scan                       |
+| `make check`    | fmt + lint + security を一括実行        |
+| `make hooks`    | pre-commit フックをインストール         |
 
 ### Pre-commit フック
 
