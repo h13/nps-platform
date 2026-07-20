@@ -21,15 +21,15 @@
 
 ## 技術スタック
 
-| レイヤー | 技術 | 理由 |
-|----------|------|------|
-| ランタイム | Cloudflare Workers | サーバーレス、無料枠で十分、`wrangler deploy` 一発 |
-| DB | Cloudflare D1 (SQLite) | Workers ネイティブ、SQL が使える、無料枠 5GB |
-| 設問管理 | Google Spreadsheet + Sheets API | 非エンジニアが編集可能、変更履歴が自動で残る |
-| メール送信 | SendGrid API v3 | `fetch()` で直接呼べる、Workers と相性が良い |
-| LP Widget | Vanilla JS (Shadow DOM) | 依存ゼロ、Workers Static Assets で同一ドメイン配信 |
-| バッチ | Workers Cron Trigger | Spreadsheet → D1 Sync / 失敗メールリトライ |
-| 認証 | Bearer Token（固定 API キー） | Workers Secret に格納、SF Webhook 認証用 |
+| レイヤー   | 技術                            | 理由                                               |
+| ---------- | ------------------------------- | -------------------------------------------------- |
+| ランタイム | Cloudflare Workers              | サーバーレス、無料枠で十分、`wrangler deploy` 一発 |
+| DB         | Cloudflare D1 (SQLite)          | Workers ネイティブ、SQL が使える、無料枠 5GB       |
+| 設問管理   | Google Spreadsheet + Sheets API | 非エンジニアが編集可能、変更履歴が自動で残る       |
+| メール送信 | SendGrid API v3                 | `fetch()` で直接呼べる、Workers と相性が良い       |
+| LP Widget  | Vanilla JS (Shadow DOM)         | 依存ゼロ、Workers Static Assets で同一ドメイン配信 |
+| バッチ     | Workers Cron Trigger            | Spreadsheet → D1 Sync / 失敗メールリトライ         |
+| 認証       | Bearer Token（固定 API キー）   | Workers Secret に格納、SF Webhook 認証用           |
 
 ---
 
@@ -190,84 +190,84 @@ SPREADSHEET_ID = "<Staging 用 Spreadsheet ID>"
 
 ### シート1: questions（設問定義）
 
-| 列名 | 型 | 説明 | 例 |
-|------|-----|------|-----|
-| id | TEXT | 設問の一意識別子。`POST /nps/response` の answers キーになる | `q_nps` |
-| type | TEXT | 設問タイプ（後述） | `nps_score` |
-| text | TEXT | 設問文 | `この製品をおすすめする可能性は？` |
-| required | BOOLEAN | 必須かどうか | `TRUE` |
-| display_order | INTEGER | 表示順（昇順） | `1` |
-| is_active | BOOLEAN | 有効/無効 | `TRUE` |
-| placeholder | TEXT | free_text のプレースホルダー | `具体的にお聞かせください...` |
-| max_length | INTEGER | free_text の最大文字数 | `500` |
-| min_value | INTEGER | rating の最小値 | `1` |
-| max_value | INTEGER | rating の最大値 | `5` |
-| min_label | TEXT | nps_score / rating のラベル（左端） | `全く思わない` |
-| max_label | TEXT | nps_score / rating のラベル（右端） | `非常にそう思う` |
+| 列名          | 型      | 説明                                                         | 例                                 |
+| ------------- | ------- | ------------------------------------------------------------ | ---------------------------------- |
+| id            | TEXT    | 設問の一意識別子。`POST /nps/response` の answers キーになる | `q_nps`                            |
+| type          | TEXT    | 設問タイプ（後述）                                           | `nps_score`                        |
+| text          | TEXT    | 設問文                                                       | `この製品をおすすめする可能性は？` |
+| required      | BOOLEAN | 必須かどうか                                                 | `TRUE`                             |
+| display_order | INTEGER | 表示順（昇順）                                               | `1`                                |
+| is_active     | BOOLEAN | 有効/無効                                                    | `TRUE`                             |
+| placeholder   | TEXT    | free_text のプレースホルダー                                 | `具体的にお聞かせください...`      |
+| max_length    | INTEGER | free_text の最大文字数                                       | `500`                              |
+| min_value     | INTEGER | rating の最小値                                              | `1`                                |
+| max_value     | INTEGER | rating の最大値                                              | `5`                                |
+| min_label     | TEXT    | nps_score / rating のラベル（左端）                          | `全く思わない`                     |
+| max_label     | TEXT    | nps_score / rating のラベル（右端）                          | `非常にそう思う`                   |
 
 **設問タイプ一覧**:
 
-| type | UI | answers に格納される値 |
-|------|----|----------------------|
-| `nps_score` | 0-10 ボタン | 整数（0-10）。1フォームに1つだけ。`nps_score` カラムにも書き込み |
-| `free_text` | textarea | 文字列 |
-| `single_select` | セレクトボックス（ドロップダウン） | 選択肢の value（文字列1つ） |
-| `multi_select` | チェックボックス群 | 選択肢の value 配列 |
-| `radio` | ラジオボタン | 選択肢の value（文字列1つ） |
-| `rating` | ★ or 数値ボタン | 整数（min_value 〜 max_value） |
+| type            | UI                                 | answers に格納される値                                           |
+| --------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| `nps_score`     | 0-10 ボタン                        | 整数（0-10）。1フォームに1つだけ。`nps_score` カラムにも書き込み |
+| `free_text`     | textarea                           | 文字列                                                           |
+| `single_select` | セレクトボックス（ドロップダウン） | 選択肢の value（文字列1つ）                                      |
+| `multi_select`  | チェックボックス群                 | 選択肢の value 配列                                              |
+| `radio`         | ラジオボタン                       | 選択肢の value（文字列1つ）                                      |
+| `rating`        | ★ or 数値ボタン                    | 整数（min_value 〜 max_value）                                   |
 
 **Spreadsheet 上のデータ例**:
 
-| id | type | text | required | display_order | is_active | placeholder | max_length | min_value | max_value | min_label | max_label |
-|----|------|------|----------|---------------|-----------|-------------|------------|-----------|-----------|-----------|-----------|
-| q_nps | nps_score | この製品を友人や同僚におすすめする可能性はどのくらいですか？ | TRUE | 1 | TRUE | | | | | 全く思わない | 非常にそう思う |
-| q_satisfaction | rating | 今回の対応にどの程度満足していますか？ | TRUE | 2 | TRUE | | | 1 | 5 | 不満 | 非常に満足 |
-| q_category | multi_select | 関連するカテゴリを選択してください | FALSE | 3 | TRUE | | | | | | |
-| q_contact_method | single_select | ご希望の連絡方法を選択してください | FALSE | 4 | TRUE | | | | | | |
-| q_department | radio | 主にやり取りした部署はどこですか？ | FALSE | 5 | TRUE | | | | | | |
-| q_reason | free_text | スコアの理由をお聞かせください | FALSE | 6 | TRUE | 具体的にお聞かせください... | 500 | | | | |
-| q_improve | free_text | 改善してほしい点はありますか？ | FALSE | 7 | FALSE | | 1000 | | | | |
+| id               | type          | text                                                         | required | display_order | is_active | placeholder                 | max_length | min_value | max_value | min_label    | max_label      |
+| ---------------- | ------------- | ------------------------------------------------------------ | -------- | ------------- | --------- | --------------------------- | ---------- | --------- | --------- | ------------ | -------------- |
+| q_nps            | nps_score     | この製品を友人や同僚におすすめする可能性はどのくらいですか？ | TRUE     | 1             | TRUE      |                             |            |           |           | 全く思わない | 非常にそう思う |
+| q_satisfaction   | rating        | 今回の対応にどの程度満足していますか？                       | TRUE     | 2             | TRUE      |                             |            | 1         | 5         | 不満         | 非常に満足     |
+| q_category       | multi_select  | 関連するカテゴリを選択してください                           | FALSE    | 3             | TRUE      |                             |            |           |           |              |                |
+| q_contact_method | single_select | ご希望の連絡方法を選択してください                           | FALSE    | 4             | TRUE      |                             |            |           |           |              |                |
+| q_department     | radio         | 主にやり取りした部署はどこですか？                           | FALSE    | 5             | TRUE      |                             |            |           |           |              |                |
+| q_reason         | free_text     | スコアの理由をお聞かせください                               | FALSE    | 6             | TRUE      | 具体的にお聞かせください... | 500        |           |           |              |                |
+| q_improve        | free_text     | 改善してほしい点はありますか？                               | FALSE    | 7             | FALSE     |                             | 1000       |           |           |              |                |
 
 ### シート2: options（選択肢定義）
 
 `single_select`, `multi_select`, `radio` タイプの設問で使用。
 
-| 列名 | 型 | 説明 | 例 |
-|------|-----|------|-----|
-| question_id | TEXT | 対応する設問の id | `q_category` |
-| value | TEXT | 送信される値（answers に格納） | `product` |
-| label | TEXT | 表示ラベル | `製品品質` |
-| display_order | INTEGER | 表示順 | `1` |
-| is_active | BOOLEAN | 有効/無効 | `TRUE` |
+| 列名          | 型      | 説明                           | 例           |
+| ------------- | ------- | ------------------------------ | ------------ |
+| question_id   | TEXT    | 対応する設問の id              | `q_category` |
+| value         | TEXT    | 送信される値（answers に格納） | `product`    |
+| label         | TEXT    | 表示ラベル                     | `製品品質`   |
+| display_order | INTEGER | 表示順                         | `1`          |
+| is_active     | BOOLEAN | 有効/無効                      | `TRUE`       |
 
 **Spreadsheet 上のデータ例**:
 
-| question_id | value | label | display_order | is_active |
-|-------------|-------|-------|---------------|-----------|
-| q_category | product | 製品品質 | 1 | TRUE |
-| q_category | support | サポート対応 | 2 | TRUE |
-| q_category | price | 価格 | 3 | TRUE |
-| q_category | usability | 使いやすさ | 4 | TRUE |
-| q_category | docs | ドキュメント | 5 | TRUE |
-| q_category | onboarding | 導入プロセス | 6 | TRUE |
-| q_category | other | その他 | 7 | TRUE |
-| q_contact_method | email | メール | 1 | TRUE |
-| q_contact_method | phone | 電話 | 2 | TRUE |
-| q_contact_method | chat | チャット | 3 | TRUE |
-| q_department | sales | 営業 | 1 | TRUE |
-| q_department | cs | カスタマーサポート | 2 | TRUE |
-| q_department | tech | テクニカルサポート | 3 | TRUE |
+| question_id      | value      | label              | display_order | is_active |
+| ---------------- | ---------- | ------------------ | ------------- | --------- |
+| q_category       | product    | 製品品質           | 1             | TRUE      |
+| q_category       | support    | サポート対応       | 2             | TRUE      |
+| q_category       | price      | 価格               | 3             | TRUE      |
+| q_category       | usability  | 使いやすさ         | 4             | TRUE      |
+| q_category       | docs       | ドキュメント       | 5             | TRUE      |
+| q_category       | onboarding | 導入プロセス       | 6             | TRUE      |
+| q_category       | other      | その他             | 7             | TRUE      |
+| q_contact_method | email      | メール             | 1             | TRUE      |
+| q_contact_method | phone      | 電話               | 2             | TRUE      |
+| q_contact_method | chat       | チャット           | 3             | TRUE      |
+| q_department     | sales      | 営業               | 1             | TRUE      |
+| q_department     | cs         | カスタマーサポート | 2             | TRUE      |
+| q_department     | tech       | テクニカルサポート | 3             | TRUE      |
 
 ### シート3: config（グローバル設定）
 
-| key | value |
-|-----|-------|
-| survey_title | ご利用に関するアンケート |
-| thanks_message | ご回答ありがとうございました |
+| key                    | value                                         |
+| ---------------------- | --------------------------------------------- |
+| survey_title           | ご利用に関するアンケート                      |
+| thanks_message         | ご回答ありがとうございました                  |
 | email_subject_template | 【{account_name}】{survey_title}（1分で完了） |
-| widget_primary_color | #2563EB |
-| widget_bg_color | #FFFFFF |
-| widget_text_color | #1F2937 |
+| widget_primary_color   | #2563EB                                       |
+| widget_bg_color        | #FFFFFF                                       |
+| widget_text_color      | #1F2937                                       |
 
 ---
 
@@ -276,6 +276,7 @@ SPREADSHEET_ID = "<Staging 用 Spreadsheet ID>"
 ### src/services/spreadsheet-sync.ts
 
 **処理フロー**:
+
 ```
 1. Google Service Account の JWT 認証で access_token 取得（Web Crypto API で署名）
 2. Sheets API v4 で 3 シートを一括取得:
@@ -292,6 +293,7 @@ SPREADSHEET_ID = "<Staging 用 Spreadsheet ID>"
 ```
 
 **Google Sheets API の認証**:
+
 ```typescript
 // Service Account JSON から JWT を生成
 // Header: { alg: "RS256", typ: "JWT" }
@@ -392,6 +394,7 @@ CREATE INDEX IF NOT EXISTS idx_responses_synced ON nps_responses(synced_at);
 ```
 
 **D1 固有の注意点**:
+
 - `GENERATED ALWAYS AS` は D1 未サポート。`segment` はアプリケーション側で `calculateSegment()` で算出して INSERT 時に書き込む
 - `ENUM` は D1 未サポート。`TEXT` + `CHECK` 制約で代替
 - タイムスタンプは `TEXT` 型で ISO 8601 形式（`datetime('now')` は UTC）
@@ -477,7 +480,8 @@ export interface Env {
 
 // --- Spreadsheet → config ---
 
-export type QuestionType = 'nps_score' | 'free_text' | 'single_select' | 'multi_select' | 'radio' | 'rating';
+export type QuestionType =
+  'nps_score' | 'free_text' | 'single_select' | 'multi_select' | 'radio' | 'rating';
 
 export interface QuestionOption {
   value: string;
@@ -532,7 +536,7 @@ export interface WebhookPayload {
 export interface NpsResponsePayload {
   token?: string;
   channel?: 'lp';
-  answers: Record<string, unknown>;  // { "q_nps": 8, "q_category": ["product"], "q_reason": "..." }
+  answers: Record<string, unknown>; // { "q_nps": 8, "q_category": ["product"], "q_reason": "..." }
   // LP メタデータ
   page_url?: string;
   scroll_percent?: number;
@@ -540,7 +544,8 @@ export interface NpsResponsePayload {
   user_agent?: string;
 }
 
-export type SurveyStatus = 'queued' | 'sending' | 'sent' | 'opened' | 'responded' | 'expired' | 'failed';
+export type SurveyStatus =
+  'queued' | 'sending' | 'sent' | 'opened' | 'responded' | 'expired' | 'failed';
 export type NpsSegment = 'promoter' | 'passive' | 'detractor';
 export type Channel = 'email' | 'lp';
 
@@ -630,6 +635,7 @@ export default {
 **認証**: `Authorization: Bearer {NPS_API_KEY}`
 
 **リクエスト**:
+
 ```json
 {
   "opportunity_id": "006xxxxxxxxxxxx",
@@ -645,6 +651,7 @@ export default {
 ```
 
 **処理**:
+
 1. Bearer Token 検証 → 不一致なら `401 Unauthorized`
 2. `opportunity_id`, `contact_email`, `stage` の必須チェック → 不足なら `400 Bad Request`
 3. 重複チェック: 同一 `opportunity_id` + `stage` で status が `queued` or `sent` or `opened` → スキップ `200 OK`（冪等）
@@ -657,11 +664,13 @@ export default {
 8. `202 Accepted` を返却
 
 **レスポンス**:
+
 ```json
 { "status": "accepted", "token": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" }
 ```
 
 重複スキップ時:
+
 ```json
 { "status": "skipped", "reason": "duplicate" }
 ```
@@ -673,6 +682,7 @@ export default {
 ### GET /nps/form/:token
 
 **処理**:
+
 1. `token` で `nps_survey_requests` を検索 → なければ `404`
 2. `expires_at` < 現在時刻 → `expired.html`（status も `expired` に更新）
 3. `status = 'responded'` → `already-responded.html`
@@ -683,6 +693,7 @@ export default {
 **レスポンス**: `200 OK`（`Content-Type: text/html`）
 
 **form.html の要件**:
+
 - config JSON の `questions` 配列をループして、`type` に応じた UI 要素を動的生成
 - hidden: `token`
 - 送信先: `POST /nps/response`（fetch 送信、ページ遷移なし）
@@ -691,20 +702,22 @@ export default {
 - config の `survey_title`, `thanks_message`, カラー設定を反映
 
 **type → UI マッピング**:
-| type | 描画する UI |
-|------|------------|
-| nps_score | 0-10 ボタン行。min_label / max_label を両端に表示 |
-| rating | min_value 〜 max_value のボタン行。min_label / max_label を両端に表示 |
-| free_text | textarea。placeholder と max_length を適用 |
-| single_select | `<select>` ドロップダウン。options から `<option>` を生成 |
-| multi_select | チェックボックス群。options からチェックボックスを生成 |
-| radio | ラジオボタン群。options からラジオボタンを生成 |
+
+| type          | 描画する UI                                                           |
+| ------------- | --------------------------------------------------------------------- |
+| nps_score     | 0-10 ボタン行。min_label / max_label を両端に表示                     |
+| rating        | min_value 〜 max_value のボタン行。min_label / max_label を両端に表示 |
+| free_text     | textarea。placeholder と max_length を適用                            |
+| single_select | `<select>` ドロップダウン。options から `<option>` を生成             |
+| multi_select  | チェックボックス群。options からチェックボックスを生成                |
+| radio         | ラジオボタン群。options からラジオボタンを生成                        |
 
 ---
 
 ### POST /nps/response
 
 **リクエスト（メール経由）**:
+
 ```json
 {
   "token": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
@@ -719,6 +732,7 @@ export default {
 ```
 
 **リクエスト（LP 経由）**:
+
 ```json
 {
   "channel": "lp",
@@ -735,6 +749,7 @@ export default {
 ```
 
 **処理**:
+
 1. D1 から `survey_config.config_json` を取得
 2. `answers` を config の `questions` 定義に基づいてバリデーション:
    - `required: true` の設問が未回答 → `400`
@@ -752,11 +767,13 @@ export default {
 6. メール経由: `nps_survey_requests.status = 'responded'`、`responded_at` を記録
 
 **レスポンス**: `201 Created`
+
 ```json
 { "status": "created", "segment": "passive" }
 ```
 
 segment が算出できない場合（nps_score 設問がない場合）:
+
 ```json
 { "status": "created", "segment": null }
 ```
@@ -770,6 +787,7 @@ CORS ヘッダー付与。
 D1 の `survey_config.config_json` をそのまま返す。
 
 **レスポンス**: `200 OK`
+
 ```json
 {
   "survey_title": "ご利用に関するアンケート",
@@ -865,6 +883,7 @@ Static Assets が自動配信。`widget/dist/nps/widget.js` → `https://nps.exa
 ### メール件名
 
 `survey_config` の `email_subject_template` を使用。プレースホルダー:
+
 - `{account_name}` → webhook payload の account_name
 - `{survey_title}` → config の survey_title
 - `{contact_name}` → webhook payload の contact_name
@@ -888,18 +907,18 @@ Static Assets が自動配信。`widget/dist/nps/widget.js` → `https://nps.exa
 ```html
 <script>
   window.NpsWidget = {
-    endpoint: "https://nps.example.com",
+    endpoint: 'https://nps.example.com',
     triggers: {
       scrollPercent: 60,
       dwellSeconds: 30,
-      operator: "OR"
+      operator: 'OR',
     },
     display: {
       cooldownDays: 90,
       maxShowCount: 3,
-      position: "bottom-right",
-      delay: 0
-    }
+      position: 'bottom-right',
+      delay: 0,
+    },
   };
 </script>
 <script src="https://nps.example.com/nps/widget.js" async></script>
@@ -927,6 +946,7 @@ Static Assets が自動配信。`widget/dist/nps/widget.js` → `https://nps.exa
 ### popup.ts
 
 **Shadow DOM レンダリング**:
+
 - `document.createElement('div')` → `attachShadow({ mode: 'closed' })`
 - config JSON の `questions` をループして type に応じた UI を動的生成
 - `position: fixed`、`z-index: 2147483647`
@@ -937,6 +957,7 @@ Static Assets が自動配信。`widget/dist/nps/widget.js` → `https://nps.exa
 **NPS スコアボタン配色**: 0-6 赤系 / 7-8 黄系 / 9-10 緑系
 
 **送信**:
+
 ```
 1. answers オブジェクトを組み立て
 2. POST {endpoint}/nps/response
@@ -1004,22 +1025,22 @@ pnpm exec esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfi
 
 ### wrangler.toml [vars]（非秘匿）
 
-| 変数名 | 値 | 説明 |
-|--------|-----|------|
-| NPS_BASE_URL | https://nps.example.com | 公開 URL |
-| NPS_SURVEY_EXPIRY_DAYS | 30 | アンケートリンク有効期限（日） |
-| SENDGRID_FROM_ADDRESS | noreply@nps.example.com | 送信元メールアドレス |
-| SENDGRID_FROM_NAME | NPS アンケート | 送信元表示名 |
-| SPREADSHEET_ID | (Spreadsheet ID) | 設問管理 Spreadsheet の ID |
+| 変数名                 | 値                      | 説明                           |
+| ---------------------- | ----------------------- | ------------------------------ |
+| NPS_BASE_URL           | https://nps.example.com | 公開 URL                       |
+| NPS_SURVEY_EXPIRY_DAYS | 30                      | アンケートリンク有効期限（日） |
+| SENDGRID_FROM_ADDRESS  | noreply@nps.example.com | 送信元メールアドレス           |
+| SENDGRID_FROM_NAME     | NPS アンケート          | 送信元表示名                   |
+| SPREADSHEET_ID         | (Spreadsheet ID)        | 設問管理 Spreadsheet の ID     |
 
 ### wrangler secret（秘匿）
 
-| 変数名 | 説明 |
-|--------|------|
-| NPS_API_KEY | SF Webhook 認証用 Bearer Token |
-| SENDGRID_API_KEY | SendGrid API キー |
+| 変数名                      | 説明                                     |
+| --------------------------- | ---------------------------------------- |
+| NPS_API_KEY                 | SF Webhook 認証用 Bearer Token           |
+| SENDGRID_API_KEY            | SendGrid API キー                        |
 | GOOGLE_SERVICE_ACCOUNT_JSON | Sheets API 認証用サービスアカウント JSON |
-| SLACK_WEBHOOK_URL | エラー通知用 Slack Webhook URL |
+| SLACK_WEBHOOK_URL           | エラー通知用 Slack Webhook URL           |
 
 ---
 
@@ -1087,16 +1108,16 @@ pnpm exec esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfi
 
 ### 単体テスト（Vitest）
 
-| 対象 | テストケース |
-|------|-------------|
-| auth middleware | 正しい Token → pass、不正 → 401、ヘッダーなし → 401 |
-| webhook | 必須パラメータ不足 → 400、正常 → 202 + D1 確認、重複 → 200 skipped |
-| form | 有効 token → 200 HTML、期限切れ → expired、回答済み → already-responded、不正 → 404 |
-| response | required 未回答 → 400、nps_score 範囲外 → 400、正常メール → 201 + status 更新、正常 LP → 201 |
+| 対象                    | テストケース                                                                                 |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| auth middleware         | 正しい Token → pass、不正 → 401、ヘッダーなし → 401                                          |
+| webhook                 | 必須パラメータ不足 → 400、正常 → 202 + D1 確認、重複 → 200 skipped                           |
+| form                    | 有効 token → 200 HTML、期限切れ → expired、回答済み → already-responded、不正 → 404          |
+| response                | required 未回答 → 400、nps_score 範囲外 → 400、正常メール → 201 + status 更新、正常 LP → 201 |
 | response バリデーション | config にない question_id → 無視、single_select 不正 value → 無視、free_text 超過 → 切り詰め |
-| calculateSegment | 0-6 → detractor、7-8 → passive、9-10 → promoter |
-| config | D1 から config_json 返却確認 |
-| spreadsheet-sync | Sheets API レスポンスの正常パース、config_json への変換、D1 UPSERT |
+| calculateSegment        | 0-6 → detractor、7-8 → passive、9-10 → promoter                                              |
+| config                  | D1 から config_json 返却確認                                                                 |
+| spreadsheet-sync        | Sheets API レスポンスの正常パース、config_json への変換、D1 UPSERT                           |
 
 ### E2E テスト
 
@@ -1115,11 +1136,11 @@ pnpm exec esbuild widget/src/widget.ts --bundle --minify --target=es2020 --outfi
 
 ### 3 環境の使い分け
 
-| 環境 | Workers 名 | D1 | SendGrid | 用途 |
-|------|-----------|-----|----------|------|
-| **local** | - | `.wrangler/state/` のローカル SQLite | sandbox mode（メール不送信） | 開発・デバッグ |
-| **staging** | nps-platform-staging | nps-platform-staging | テスト用 API Key | SF Flow 疎通テスト、LP Widget 結合テスト |
-| **production** | nps-platform | nps-platform | 本番 API Key | 本番運用 |
+| 環境           | Workers 名           | D1                                   | SendGrid                     | 用途                                     |
+| -------------- | -------------------- | ------------------------------------ | ---------------------------- | ---------------------------------------- |
+| **local**      | -                    | `.wrangler/state/` のローカル SQLite | sandbox mode（メール不送信） | 開発・デバッグ                           |
+| **staging**    | nps-platform-staging | nps-platform-staging                 | テスト用 API Key             | SF Flow 疎通テスト、LP Widget 結合テスト |
+| **production** | nps-platform         | nps-platform                         | 本番 API Key                 | 本番運用                                 |
 
 ### ローカル開発環境セットアップ
 
@@ -1147,6 +1168,7 @@ wrangler dev
 ```
 
 **ローカル環境の特徴**:
+
 - D1 はローカルの SQLite。外部接続不要で全 API が動作する
 - `wrangler dev` はホットリロード対応。ファイル保存で即反映
 - SendGrid API は実際に呼ばれる。テスト時は `.dev.vars` に sandbox 用キーを設定するか、環境変数で送信をスキップする仕組みを入れる
@@ -1267,6 +1289,7 @@ wrangler deploy --env staging
 ```
 
 **Staging 環境のポイント**:
+
 - D1 は Production とは完全に別インスタンス
 - SendGrid は同じアカウントでも API Key を分けることを推奨（テストメールの分離）
 - Spreadsheet も Staging 用を別途作成（本番の設問を壊さない）
@@ -1368,6 +1391,7 @@ claude
 ### Phase ごとの指示例
 
 **Phase 1**:
+
 ```
 SPEC.md を読んで Phase 1 を実行して。
 wrangler.toml、sql/schema.sql、sql/seed.sql、src/types.ts、
@@ -1375,6 +1399,7 @@ GET /nps/config のルートを作成して、wrangler dev で動作確認でき
 ```
 
 **Phase 2**:
+
 ```
 SPEC.md の Phase 2 を実行して。
 webhook, form, response, config の全ルートを実装して。
@@ -1382,6 +1407,7 @@ curl で一連のフロー（webhook → form → response）が動くことを�
 ```
 
 **Phase 3**:
+
 ```
 SPEC.md の Phase 3 を実行して。
 SendGrid のメール送信を webhook に統合して。
@@ -1389,6 +1415,7 @@ SendGrid のメール送信を webhook に統合して。
 ```
 
 **Phase 4**:
+
 ```
 SPEC.md の Phase 4 を実行して。
 widget の trigger.ts、popup.ts、widget.ts を実装して。
@@ -1397,6 +1424,7 @@ esbuild でビルドして、ローカルの HTML に埋め込んでテストし
 ```
 
 **Phase 5**:
+
 ```
 SPEC.md の Phase 5 を実行して。
 Spreadsheet → D1 の同期処理を実装して。
@@ -1426,12 +1454,12 @@ widget/dist/
 
 ## コスト試算（月間 10,000 件）
 
-| 項目 | 月額 |
-|------|------|
-| Cloudflare Workers | $0（無料枠: 10万 req/日） |
-| Cloudflare D1 | $0（無料枠: 5GB, 500万 reads/日） |
-| SendGrid | $0〜$19.95（Free: 100通/日 / Essentials: 50,000通/月） |
-| Google Sheets API | $0（無料枠: 300 req/分） |
-| Google Spreadsheet | $0 |
-| ドメイン | ~$10/年 |
-| **合計** | **$0 〜 $20/月** |
+| 項目               | 月額                                                   |
+| ------------------ | ------------------------------------------------------ |
+| Cloudflare Workers | $0（無料枠: 10万 req/日）                              |
+| Cloudflare D1      | $0（無料枠: 5GB, 500万 reads/日）                      |
+| SendGrid           | $0〜$19.95（Free: 100通/日 / Essentials: 50,000通/月） |
+| Google Sheets API  | $0（無料枠: 300 req/分）                               |
+| Google Spreadsheet | $0                                                     |
+| ドメイン           | ~$10/年                                                |
+| **合計**           | **$0 〜 $20/月**                                       |

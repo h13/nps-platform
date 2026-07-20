@@ -4,8 +4,8 @@ compatibility_date = "2024-12-01"
 
 [triggers]
 crons = [
-  "0 * * * *",     # 毎時 00分: Spreadsheet → D1 config 同期
-  "0 18 * * *"     # 毎日 18:00 UTC (AM 3:00 JST): 失敗メールリトライ
+  "0 * * * *", # 毎時 00分: Spreadsheet → D1 config 同期
+  "0 18 * * *", # 毎日 18:00 UTC (AM 3:00 JST): 失敗メールリトライ
 ]
 
 [[d1_databases]]
@@ -29,10 +29,7 @@ SPREADSHEET_ID = "<Google Spreadsheet ID>"
 name = "nps-platform-staging"
 
 [env.staging.triggers]
-crons = [
-  "0 * * * *",
-  "0 18 * * *"
-]
+crons = ["0 * * * *", "0 18 * * *"]
 
 [[env.staging.d1_databases]]
 binding = "DB"

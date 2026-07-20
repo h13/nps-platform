@@ -10,16 +10,16 @@ NPS（Net Promoter Score）計測プラットフォーム。Cloudflare Workers +
 
 ## 技術スタック
 
-| レイヤー | 技術 |
-|----------|------|
-| ランタイム | Cloudflare Workers |
-| DB | Cloudflare D1 (SQLite) |
-| 設問管理 | Google Spreadsheet → D1 同期 |
-| メール送信 | SendGrid API v3 |
-| LP Widget | Vanilla JS (Shadow DOM) |
-| バッチ | Workers Cron Trigger |
-| 認証 | Bearer Token（固定 API キー） |
-| IaC | Terraform (GCP + Cloudflare) |
+| レイヤー   | 技術                          |
+| ---------- | ----------------------------- |
+| ランタイム | Cloudflare Workers            |
+| DB         | Cloudflare D1 (SQLite)        |
+| 設問管理   | Google Spreadsheet → D1 同期  |
+| メール送信 | SendGrid API v3               |
+| LP Widget  | Vanilla JS (Shadow DOM)       |
+| バッチ     | Workers Cron Trigger          |
+| 認証       | Bearer Token（固定 API キー） |
+| IaC        | Terraform (GCP + Cloudflare)  |
 
 ## セットアップ
 
@@ -55,42 +55,42 @@ pnpm run dev           # http://localhost:8787
 
 ## API エンドポイント
 
-| Method | Path | 認証 | 説明 |
-|--------|------|------|------|
-| POST | `/nps/webhook` | Bearer Token | Salesforce Webhook 受信 → メール送信 |
-| GET | `/nps/form/:token` | なし | アンケートフォーム HTML |
-| POST | `/nps/response` | なし | 回答受付（メール経由 / LP 共通） |
-| GET | `/nps/config` | なし | 設問・選択肢・設定を JSON で返却 |
-| POST | `/nps/sync` | Bearer Token | Spreadsheet → D1 手動同期 |
-| GET | `/nps/widget.js` | なし | LP 埋め込みウィジェット（Static Assets） |
+| Method | Path               | 認証         | 説明                                     |
+| ------ | ------------------ | ------------ | ---------------------------------------- |
+| POST   | `/nps/webhook`     | Bearer Token | Salesforce Webhook 受信 → メール送信     |
+| GET    | `/nps/form/:token` | なし         | アンケートフォーム HTML                  |
+| POST   | `/nps/response`    | なし         | 回答受付（メール経由 / LP 共通）         |
+| GET    | `/nps/config`      | なし         | 設問・選択肢・設定を JSON で返却         |
+| POST   | `/nps/sync`        | Bearer Token | Spreadsheet → D1 手動同期                |
+| GET    | `/nps/widget.js`   | なし         | LP 埋め込みウィジェット（Static Assets） |
 
 ### Cron Trigger
 
-| スケジュール | 処理 |
-|-------------|------|
-| `0 * * * *` (毎時) | Spreadsheet → D1 config 同期 |
-| `0 18 * * *` (AM 3:00 JST) | 失敗メールリトライ |
+| スケジュール               | 処理                         |
+| -------------------------- | ---------------------------- |
+| `0 * * * *` (毎時)         | Spreadsheet → D1 config 同期 |
+| `0 18 * * *` (AM 3:00 JST) | 失敗メールリトライ           |
 
 ## 環境変数
 
 ### wrangler.toml vars（非秘匿）
 
-| 変数名 | 説明 |
-|--------|------|
-| `NPS_BASE_URL` | プラットフォームの公開 URL |
-| `NPS_SURVEY_EXPIRY_DAYS` | アンケート有効期限（日数） |
-| `SENDGRID_FROM_ADDRESS` | 送信元メールアドレス |
-| `SENDGRID_FROM_NAME` | 送信元表示名 |
-| `SPREADSHEET_ID` | 設問管理用 Google Spreadsheet ID |
+| 変数名                   | 説明                             |
+| ------------------------ | -------------------------------- |
+| `NPS_BASE_URL`           | プラットフォームの公開 URL       |
+| `NPS_SURVEY_EXPIRY_DAYS` | アンケート有効期限（日数）       |
+| `SENDGRID_FROM_ADDRESS`  | 送信元メールアドレス             |
+| `SENDGRID_FROM_NAME`     | 送信元表示名                     |
+| `SPREADSHEET_ID`         | 設問管理用 Google Spreadsheet ID |
 
 ### Secrets（`wrangler secret put` で登録）
 
-| 変数名 | 説明 |
-|--------|------|
-| `NPS_API_KEY` | Webhook / Sync 認証用 API キー |
-| `SENDGRID_API_KEY` | SendGrid API キー |
+| 変数名                        | 説明                                     |
+| ----------------------------- | ---------------------------------------- |
+| `NPS_API_KEY`                 | Webhook / Sync 認証用 API キー           |
+| `SENDGRID_API_KEY`            | SendGrid API キー                        |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | Spreadsheet 読み取り用サービスアカウント |
-| `SLACK_WEBHOOK_URL` | エラー通知用 Slack Webhook |
+| `SLACK_WEBHOOK_URL`           | エラー通知用 Slack Webhook               |
 
 ## 開発コマンド
 
@@ -190,12 +190,12 @@ LP に以下のスクリプトタグを追加する：
 
 ## CI
 
-| ワークフロー | トリガー | 内容 |
-|-------------|---------|------|
-| **CI** (`ci.yml`) | push / PR to main | commitlint, biome check, knip, typecheck, tests, coverage, bundle size, audit, actionlint |
-| **E2E** (`e2e.yml`) | push / PR to main | Playwright E2E テスト, Lighthouse CI |
-| **Terraform** (`terraform.yml`) | infra/** 変更時 | fmt, tflint, trivy, shellcheck |
-| **CodeQL** | GitHub Default Setup | javascript-typescript セキュリティ分析 |
+| ワークフロー                    | トリガー             | 内容                                                                                      |
+| ------------------------------- | -------------------- | ----------------------------------------------------------------------------------------- |
+| **CI** (`ci.yml`)               | push / PR to main    | commitlint, biome check, knip, typecheck, tests, coverage, bundle size, audit, actionlint |
+| **E2E** (`e2e.yml`)             | push / PR to main    | Playwright E2E テスト, Lighthouse CI                                                      |
+| **Terraform** (`terraform.yml`) | infra/** 変更時      | fmt, tflint, trivy, shellcheck                                                            |
+| **CodeQL**                      | GitHub Default Setup | javascript-typescript セキュリティ分析                                                    |
 
 Branch protection: `check` + `e2e` が必須。force push 禁止。PR 経由でのマージが必要。
 
