@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "rules": {
+    "no-console": [
+      "error",
+      {
+        "allow": ["error"]
+      }
+    ],
+    "typescript/no-explicit-any": "error",
+    "max-lines": "off",
+    "unicorn/no-array-sort": "off"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts"],
+      "rules": {
+        "typescript/no-non-null-assertion": "off",
+        "no-unused-vars": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["node_modules", "dist", "build", ".wrangler"]
+}
