@@ -1,25 +1,25 @@
 .PHONY: init plan apply output secrets fmt validate lint security shellcheck check hooks
 
 init:
-	terraform init
+	tofu init
 
 plan:
-	terraform plan
+	tofu plan
 
 apply:
-	terraform apply
+	tofu apply
 
 output:
-	terraform output
+	tofu output
 
 secrets:
 	./scripts/push-secrets.sh
 
 fmt:
-	terraform fmt -check -recursive
+	tofu fmt -check -recursive
 
 validate:
-	terraform validate
+	tofu validate
 
 lint:
 	tflint --init
