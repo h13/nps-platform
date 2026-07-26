@@ -25,7 +25,7 @@ jobs:
 
       - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
         with:
-          tofu_version: "1.12.1"
+          tofu_version: '1.12.1'
 
       - name: OpenTofu Format Check
         run: tofu fmt -check -recursive
