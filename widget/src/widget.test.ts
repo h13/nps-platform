@@ -34,12 +34,13 @@ function setWidgetConfig(overrides: Record<string, unknown> = {}): void {
 describe('widget init', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.mock('./trigger', () => ({ startTriggerWatch: mockStartTriggerWatch }));
+    vi.mock('./popup', () => ({ showPopup: mockShowPopup }));
+    mockStartTriggerWatch.mockClear().mockReturnValue(vi.fn());
+    mockShowPopup.mockClear().mockReturnValue(document.createElement('div'));
     localStorage.clear();
     delete window.NpsWidget;
     document.body.innerHTML = '';
-    // Re-establish mock implementations (vi.restoreAllMocks resets vi.fn() return values)
-    mockStartTriggerWatch?.mockReturnValue(vi.fn());
-    mockShowPopup?.mockReturnValue(document.createElement('div'));
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
