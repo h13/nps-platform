@@ -2,17 +2,20 @@ import {
   createExecutionContext,
   createScheduledController,
   env,
-  fetchMock,
   SELF,
   waitOnExecutionContext,
 } from 'cloudflare:test';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import worker from './index';
 import { setupTestDb } from './test-helpers/setup-db';
 
 describe('Worker router', () => {
   beforeAll(async () => {
     await setupTestDb();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   beforeEach(async () => {
@@ -71,71 +74,86 @@ describe('Worker router', () => {
     });
 
     it('returns 200 on successful sync', async () => {
-      fetchMock.activate();
-      fetchMock.disableNetConnect();
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+        const url =
+          typeof input === 'string'
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : (input as Request).url;
 
-      // Mock Google OAuth token exchange
-      fetchMock
-        .get('https://oauth2.googleapis.com')
-        .intercept({ path: '/token', method: 'POST' })
-        .reply(
-          200,
-          JSON.stringify({
-            access_token: 'test-access-token',
-            token_type: 'Bearer',
-            expires_in: 3600,
-          }),
-          { headers: { 'Content-Type': 'application/json' } },
-        );
+        if (url.startsWith('https://oauth2.googleapis.com/token')) {
+          return new Response(
+            JSON.stringify({
+              access_token: 'test-access-token',
+              token_type: 'Bearer',
+              expires_in: 3600,
+            }),
+            { headers: { 'Content-Type': 'application/json' } },
+          );
+        }
 
-      // Mock Google Sheets API
-      fetchMock
-        .get('https://sheets.googleapis.com')
-        .intercept({ path: /\/v4\/spreadsheets\/.*/, method: 'GET' })
-        .reply(
-          200,
-          JSON.stringify({
-            spreadsheetId: 'test-sheet',
-            valueRanges: [
-              {
-                range: 'questions!A:L',
-                majorDimension: 'ROWS',
-                values: [
-                  [
-                    'id',
-                    'type',
-                    'text',
-                    'required',
-                    'is_active',
-                    'display_order',
-                    'placeholder',
-                    'max_length',
-                    'min_value',
-                    'max_value',
-                    'min_label',
-                    'max_label',
+        if (url.startsWith('https://sheets.googleapis.com/v4/spreadsheets/')) {
+          return new Response(
+            JSON.stringify({
+              spreadsheetId: 'test-sheet',
+              valueRanges: [
+                {
+                  range: 'questions!A:L',
+                  majorDimension: 'ROWS',
+                  values: [
+                    [
+                      'id',
+                      'type',
+                      'text',
+                      'required',
+                      'is_active',
+                      'display_order',
+                      'placeholder',
+                      'max_length',
+                      'min_value',
+                      'max_value',
+                      'min_label',
+                      'max_label',
+                    ],
+                    [
+                      'nps',
+                      'nps_score',
+                      'How likely?',
+                      'TRUE',
+                      'TRUE',
+                      '1',
+                      '',
+                      '',
+                      '',
+                      '',
+                      '',
+                      '',
+                    ],
                   ],
-                  ['nps', 'nps_score', 'How likely?', 'TRUE', 'TRUE', '1', '', '', '', '', '', ''],
-                ],
-              },
-              {
-                range: 'options!A:E',
-                majorDimension: 'ROWS',
-                values: [['question_id', 'value', 'label', 'is_active', 'display_order']],
-              },
-              {
-                range: 'config!A:B',
-                majorDimension: 'ROWS',
-                values: [
-                  ['key', 'value'],
-                  ['survey_title', 'Test Survey'],
-                  ['thanks_message', 'Thank you'],
-                ],
-              },
-            ],
-          }),
-          { headers: { 'Content-Type': 'application/json' } },
-        );
+                },
+                {
+                  range: 'options!A:E',
+                  majorDimension: 'ROWS',
+                  values: [['question_id', 'value', 'label', 'is_active', 'display_order']],
+                },
+                {
+                  range: 'config!A:B',
+                  majorDimension: 'ROWS',
+                  values: [
+                    ['key', 'value'],
+                    ['survey_title', 'Test Survey'],
+                    ['thanks_message', 'Thank you'],
+                  ],
+                },
+              ],
+            }),
+            { headers: { 'Content-Type': 'application/json' } },
+          );
+        }
+
+        return new Response('Not Found', { status: 404 });
+      });
 
       // Generate a test RSA key pair
       const keyPair = await crypto.subtle.generateKey(
@@ -179,8 +197,6 @@ describe('Worker router', () => {
       expect(configRow).toBeTruthy();
       const config = JSON.parse(configRow!.config_json);
       expect(config.survey_title).toBe('Test Survey');
-
-      fetchMock.deactivate();
     });
   });
 
