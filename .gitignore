@@ -8,8 +8,9 @@ coverage/
 playwright-report/
 test-results/
 
-# Terraform
+# OpenTofu / Terraform
 infra/.terraform/
+infra/.opentofu/
 infra/*.tfstate*
 infra/.terraform.lock.hcl
 infra/terraform.tfvars
