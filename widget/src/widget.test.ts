@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-let mockStartTriggerWatch: ReturnType<typeof vi.fn>;
-let mockShowPopup: ReturnType<typeof vi.fn>;
+const { mockStartTriggerWatch, mockShowPopup } = vi.hoisted(() => ({
+  mockStartTriggerWatch: vi.fn().mockReturnValue(vi.fn()),
+  mockShowPopup: vi.fn().mockReturnValue(document.createElement('div')),
+}));
 
-vi.mock('./trigger', () => {
-  mockStartTriggerWatch = vi.fn().mockReturnValue(vi.fn());
-  return { startTriggerWatch: mockStartTriggerWatch };
-});
+vi.mock('./trigger', () => ({
+  startTriggerWatch: mockStartTriggerWatch,
+}));
 
-vi.mock('./popup', () => {
-  mockShowPopup = vi.fn().mockReturnValue(document.createElement('div'));
-  return { showPopup: mockShowPopup };
-});
+vi.mock('./popup', () => ({
+  showPopup: mockShowPopup,
+}));
 
 const MOCK_CONFIG = {
   survey_title: 'Test',

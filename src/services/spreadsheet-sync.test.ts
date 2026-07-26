@@ -1,5 +1,5 @@
-import { env, fetchMock } from 'cloudflare:test';
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { env } from 'cloudflare:test';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setupTestDb } from '../test-helpers/setup-db';
 import {
   buildSurveyConfig,
@@ -370,31 +370,40 @@ function mockSheetsResponse(questionValues: string[][]): string {
 }
 
 function setupFetchMocks(sheetsBody: string): void {
-  fetchMock.activate();
-  fetchMock.disableNetConnect();
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+    const url =
+      typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : (input as Request).url;
 
-  fetchMock
-    .get('https://oauth2.googleapis.com')
-    .intercept({ path: '/token', method: 'POST' })
-    .reply(
-      200,
-      JSON.stringify({
-        access_token: 'test-token',
-        token_type: 'Bearer',
-        expires_in: 3600,
-      }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    if (url.startsWith('https://oauth2.googleapis.com/token')) {
+      return new Response(
+        JSON.stringify({
+          access_token: 'test-token',
+          token_type: 'Bearer',
+          expires_in: 3600,
+        }),
+        { headers: { 'Content-Type': 'application/json' } },
+      );
+    }
 
-  fetchMock
-    .get('https://sheets.googleapis.com')
-    .intercept({ path: /\/v4\/spreadsheets\/.*/, method: 'GET' })
-    .reply(200, sheetsBody, { headers: { 'Content-Type': 'application/json' } });
+    if (url.startsWith('https://sheets.googleapis.com/v4/spreadsheets/')) {
+      return new Response(sheetsBody, { headers: { 'Content-Type': 'application/json' } });
+    }
+
+    return new Response('Not Found', { status: 404 });
+  });
 }
 
 describe('syncSpreadsheetToD1', () => {
   beforeAll(async () => {
     await setupTestDb();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   beforeEach(async () => {
@@ -451,17 +460,23 @@ describe('syncSpreadsheetToD1', () => {
     };
 
     await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('no active questions');
-    fetchMock.deactivate();
   });
 
   it('throws when Google token exchange fails', async () => {
-    fetchMock.activate();
-    fetchMock.disableNetConnect();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
 
-    fetchMock
-      .get('https://oauth2.googleapis.com')
-      .intercept({ path: '/token', method: 'POST' })
-      .reply(401, 'Unauthorized');
+      if (url.startsWith('https://oauth2.googleapis.com/token')) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      return new Response('Not Found', { status: 404 });
+    });
 
     const pem = await generateTestPem();
     const testEnv = {
@@ -474,24 +489,30 @@ describe('syncSpreadsheetToD1', () => {
     };
 
     await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('Token exchange failed');
-    fetchMock.deactivate();
   });
 
   it('throws when Sheets API fails', async () => {
-    fetchMock.activate();
-    fetchMock.disableNetConnect();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
 
-    fetchMock
-      .get('https://oauth2.googleapis.com')
-      .intercept({ path: '/token', method: 'POST' })
-      .reply(200, JSON.stringify({ access_token: 't', token_type: 'Bearer', expires_in: 3600 }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      if (url.startsWith('https://oauth2.googleapis.com/token')) {
+        return new Response(
+          JSON.stringify({ access_token: 't', token_type: 'Bearer', expires_in: 3600 }),
+          { headers: { 'Content-Type': 'application/json' } },
+        );
+      }
 
-    fetchMock
-      .get('https://sheets.googleapis.com')
-      .intercept({ path: /\/v4\/spreadsheets\/.*/, method: 'GET' })
-      .reply(403, 'Forbidden');
+      if (url.startsWith('https://sheets.googleapis.com/v4/spreadsheets/')) {
+        return new Response('Forbidden', { status: 403 });
+      }
+
+      return new Response('Not Found', { status: 404 });
+    });
 
     const pem = await generateTestPem();
     const testEnv = {
@@ -504,7 +525,6 @@ describe('syncSpreadsheetToD1', () => {
     };
 
     await expect(syncSpreadsheetToD1(testEnv)).rejects.toThrow('Sheets API failed');
-    fetchMock.deactivate();
   });
 
   it('writes config to D1 on success', async () => {
@@ -546,13 +566,16 @@ describe('syncSpreadsheetToD1', () => {
     const config = JSON.parse(row!.config_json);
     expect(config.survey_title).toBe('Test Survey');
     expect(config.questions).toHaveLength(1);
-    fetchMock.deactivate();
   });
 });
 
 describe('runSpreadsheetSync', () => {
   beforeAll(async () => {
     await setupTestDb();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('catches errors and logs them', async () => {
@@ -568,14 +591,20 @@ describe('runSpreadsheetSync', () => {
   });
 
   it('notifies Slack on error when webhook URL is set', async () => {
-    fetchMock.activate();
-    fetchMock.disableNetConnect();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+      const url =
+        typeof input === 'string'
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : (input as Request).url;
 
-    // Mock Slack webhook
-    fetchMock
-      .get('https://hooks.slack.com')
-      .intercept({ path: '/test', method: 'POST' })
-      .reply(200, 'ok');
+      if (url === 'https://hooks.slack.com/test') {
+        return new Response('ok', { status: 200 });
+      }
+
+      return new Response('Not Found', { status: 404 });
+    });
 
     const testEnv = {
       ...env,
@@ -585,6 +614,5 @@ describe('runSpreadsheetSync', () => {
     };
 
     await runSpreadsheetSync(testEnv);
-    fetchMock.deactivate();
   });
 });
