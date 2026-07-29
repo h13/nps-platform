@@ -45,7 +45,7 @@
     "jsdom": "29.1.1",
     "knip": "6.29.0",
     "lint-staged": "17.2.0",
-    "oxfmt": "0.60.0",
+    "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "typescript": "7.0.2",
     "vitest": "4.1.10",
