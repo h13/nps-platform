@@ -51,8 +51,8 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-istanbul@4.1.10)(jsdom@29.1.1)(vite@7.3.6(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0))
       wrangler:
-        specifier: 4.114.0
-        version: 4.114.0(@cloudflare/workers-types@5.20260719.1)
+        specifier: 4.115.0
+        version: 4.115.0(@cloudflare/workers-types@5.20260719.1)
 
 packages:
 
@@ -1835,11 +1835,6 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
-  miniflare@4.20260722.0:
-    resolution: {integrity: sha512-LW6ABMhCx/yIEFBLC/DO4yAhdm2T/G7jp7pr5T2kj895+CCIaHZqpMXdW9O6YE48LcYcCJChwWc8aEs1vpbTXw==}
-    engines: {node: '>=22.0.0'}
-    hasBin: true
-
   miniflare@4.20260722.1:
     resolution: {integrity: sha512-FJIg4omaCb2wwSyOeRosEdmVRi3JzGAOOH3pa3twmmtvWECl6BVZMIDwJbjByLKRyU+mrfk0M/n3oSiojFZvSA==}
     engines: {node: '>=22.0.0'}
@@ -2189,16 +2184,6 @@ packages:
     resolution: {integrity: sha512-NycKuc1x2onvsRfGGpM093vRlLFU2zHDAM0+APpccfg4+gZxDGCH27RmdDvkeBuoZyYqgLo3oAfF6re4mvC3vQ==}
     engines: {node: '>=16'}
     hasBin: true
-
-  wrangler@4.114.0:
-    resolution: {integrity: sha512-M65P25t5UHA1TIJfgZXDcj+YzVobgKdRguM2QPz0xnxLFuOcuE3ErgllDht0iaho7MS4o0g/Bb4YK2+GT+bibg==}
-    engines: {node: '>=22.0.0'}
-    hasBin: true
-    peerDependencies:
-      '@cloudflare/workers-types': ^5.20260722.1
-    peerDependenciesMeta:
-      '@cloudflare/workers-types':
-        optional: true
 
   wrangler@4.115.0:
     resolution: {integrity: sha512-+upG2VW66M1sjb43yzgUZ6Ss8iYpJ6+7F3U4GF8TY5EYd+08sYdS54d24AEwCnhuef3J9KlSPusqiqR9WYy1UA==}
@@ -3617,18 +3602,6 @@ snapshots:
 
   mdn-data@2.27.1: {}
 
-  miniflare@4.20260722.0:
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      sharp: 0.35.2
-      undici: 7.28.0
-      workerd: 1.20260722.1
-      ws: 8.21.0
-      youch: 4.1.0-beta.10
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   miniflare@4.20260722.1:
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
@@ -4034,23 +4007,6 @@ snapshots:
       '@cloudflare/workerd-linux-64': 1.20260722.1
       '@cloudflare/workerd-linux-arm64': 1.20260722.1
       '@cloudflare/workerd-windows-64': 1.20260722.1
-
-  wrangler@4.114.0(@cloudflare/workers-types@5.20260719.1):
-    dependencies:
-      '@cloudflare/kv-asset-handler': 0.5.0
-      '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260722.1)
-      blake3-wasm: 2.1.5
-      esbuild: 0.28.1
-      miniflare: 4.20260722.0
-      path-to-regexp: 6.3.0
-      unenv: 2.0.0-rc.24
-      workerd: 1.20260722.1
-    optionalDependencies:
-      '@cloudflare/workers-types': 5.20260719.1
-      fsevents: 2.3.3
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   wrangler@4.115.0(@cloudflare/workers-types@5.20260719.1):
     dependencies:
