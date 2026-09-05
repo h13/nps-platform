@@ -44,7 +44,7 @@
     "husky": "9.1.7",
     "jsdom": "29.1.1",
     "knip": "6.34.0",
-    "lint-staged": "17.4.1",
+    "lint-staged": "17.5.0",
     "oxfmt": "0.66.0",
     "oxlint": "1.80.0",
     "typescript": "7.0.2",
