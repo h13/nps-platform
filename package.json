@@ -46,7 +46,7 @@
     "knip": "6.43.0",
     "lint-staged": "17.6.0",
     "oxfmt": "0.72.0",
-    "oxlint": "1.89.0",
+    "oxlint": "1.90.0",
     "typescript": "7.0.2",
     "vitest": "4.1.12",
     "wrangler": "4.152.0"
