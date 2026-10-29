@@ -10,5 +10,5 @@ permissions:
 
 jobs:
   publish:
-    uses: h13/.github/.github/workflows/publish-node.yml@79c595bd8b334edcac1512e8cfa15fa6c70b6cf2 # main
+    uses: h13/.github/.github/workflows/publish-node.yml@db2f14258176a9abff8b83cfea76ca95ea4d8c49 # main
     secrets: inherit
