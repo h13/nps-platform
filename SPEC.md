@@ -481,7 +481,12 @@ export interface Env {
 // --- Spreadsheet → config ---
 
 export type QuestionType =
-  'nps_score' | 'free_text' | 'single_select' | 'multi_select' | 'radio' | 'rating';
+  | 'nps_score'
+  | 'free_text'
+  | 'single_select'
+  | 'multi_select'
+  | 'radio'
+  | 'rating';
 
 export interface QuestionOption {
   value: string;
@@ -545,7 +550,13 @@ export interface NpsResponsePayload {
 }
 
 export type SurveyStatus =
-  'queued' | 'sending' | 'sent' | 'opened' | 'responded' | 'expired' | 'failed';
+  | 'queued'
+  | 'sending'
+  | 'sent'
+  | 'opened'
+  | 'responded'
+  | 'expired'
+  | 'failed';
 export type NpsSegment = 'promoter' | 'passive' | 'detractor';
 export type Channel = 'email' | 'lp';
 
