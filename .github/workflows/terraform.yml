@@ -25,7 +25,7 @@ jobs:
 
       - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
         with:
-          tofu_version: 'v1.13.2'
+          tofu_version: 'v1.13.9'
 
       - name: OpenTofu Format Check
         run: tofu fmt -check -recursive
@@ -49,10 +49,10 @@ jobs:
           output: trivy-results.sarif
           exit-code: 1
           trivy-config: infra/trivy.yaml
-          version: 'v0.76.1'
+          version: 'v0.76.2'
 
       - name: Upload Trivy SARIF
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         if: always()
         with:
           sarif_file: trivy-results.sarif
