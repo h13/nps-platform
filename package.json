@@ -43,7 +43,7 @@
     "@vitest/coverage-istanbul": "4.1.12",
     "husky": "9.1.7",
     "jsdom": "31.0.1",
-    "knip": "6.45.1",
+    "knip": "6.47.0",
     "lint-staged": "17.6.1",
     "oxfmt": "0.79.0",
     "oxlint": "1.94.0",
