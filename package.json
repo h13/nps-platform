@@ -40,7 +40,7 @@
     "@commitlint/cli": "21.2.4",
     "@commitlint/config-conventional": "21.2.4",
     "@playwright/test": "1.65.1",
-    "@vitest/coverage-istanbul": "4.1.12",
+    "@vitest/coverage-istanbul": "5.1.2",
     "husky": "9.1.7",
     "jsdom": "31.0.1",
     "knip": "6.48.0",
@@ -48,7 +48,7 @@
     "oxfmt": "0.80.0",
     "oxlint": "1.95.0",
     "typescript": "7.0.2",
-    "vitest": "4.1.12",
+    "vitest": "5.1.2",
     "wrangler": "4.167.0"
   },
   "lint-staged": {
